@@ -4,6 +4,7 @@ print("歡迎使用BoardMate自動設定程式\n\n")
 
 with open ("./setting.json","r")as f:
     data=json.load(f)
+    
 
 print("----------------------------")
 print("discord oautch設定")
