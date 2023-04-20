@@ -2,7 +2,8 @@
     "oauth": {
         "bot_token": "",
         "client_secret": "",
-        "url": ""
+        "url": "",
+        "id":""
     },
     "pterodactyl": {
         "url": "",

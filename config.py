@@ -10,6 +10,7 @@ print("discord oautch設定")
 
 data["oauth"]["bot_token"] = input(f"機器人token: ")
 data["oauth"]["client_secret"] = input(f"client_secret: ")
+data["oauth"]["id"] = input(f"app id: ")
 data["oauth"]["url"] = input(f"boardmate網址: ")
 
 with open ("./setting.json","w+")as f:
