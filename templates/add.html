@@ -5,8 +5,23 @@
   <meta charset="UTF-8">
   <title>BoardMate Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
-  <link rel="stylesheet" href="static/style.css">
-
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .fo{
+      color: white;
+      
+    }
+    input:focus{
+      outline: none;
+    }
+    input{
+      
+      border-radius: 5px;
+      color: white;
+      background-color: rgb(34, 34, 115);
+      box-shadow: 0 0px 0px #ccc;
+    }
+  </style>
 </head>
 
 <body>
@@ -32,7 +47,7 @@
         <span>BoardMate</span>
       </div>
       <ul class="nav-list">
-        <li class="nav-list-item active">
+        <li class="nav-list-item ">
           <a class="nav-list-link" href="/">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -42,7 +57,7 @@
             首頁
           </a>
         </li>
-        <li class="nav-list-item ">
+        <li class="nav-list-item active">
           <a class="nav-list-link" href="/server/add">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -144,25 +159,21 @@
         <div class="chart-container-wrapper big">
           <div class="chart-container">
             <div class="chart-container-header">
-              <h2>我的伺服器</h2>
+              <h2>新增伺服器</h2>
             </div>
-            <div class="chart-container-wrapper">
-              <table>
-                <tr>
-                  <td>名稱</td>
-                  <td>CPU</td>
-                  <td>記憶體</td>
-                  <td>空間</td>
-                  <td>操作</td>
-                </tr>
-                <tr>
-                  <td>awa</td>
-                  <td>100</td>
-                  <td>1024</td>
-                  <td>1024</td>
-                  <td><button class="edit">編輯</button> <button class="del">刪除</button></td>
-                </tr>
-              </table>
+            <div class="fo imtext">
+              <form action="#" method="post">
+                <p>名稱</p>
+                <p><input type="text" name="name"></p>
+                <p>cpu</p>
+                <p><input name="cpu" type="number"></p>
+                <p>記憶體</p>
+                <p><input name="memory" type="number"></p>
+                <p>空間</p>
+                <p><input name="disk" type="number"></p>
+                <p><input type="submit" value="送出資料"></p>
+            
+            </form>
             </div>
 
           </div>
@@ -172,7 +183,7 @@
   </div>
   <!-- partial -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js'></script>
-  <script src="static/script.js"></script>
+  <script src="/static/script.js"></script>
 
 </body>
 
