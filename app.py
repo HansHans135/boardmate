@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session,jsonify
 from zenora import APIClient
 import json
+import pteropy
 app = Flask(__name__)
 
 with open ("./setting.json","r")as f:
@@ -10,7 +11,15 @@ app.config["SECRET_KEY"] = "mysecret"
 
 @app.route("/")
 def home():
+    access_token = session.get("access_token")
+
+    if not access_token:
+        return render_template("login.html")
+
+    bearer_client = APIClient(access_token, bearer=True)
+    current_user = bearer_client.users.get_current_user()
     return render_template("index.html")
+    
     
 
 @app.route("/login")
