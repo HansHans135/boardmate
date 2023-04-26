@@ -24,9 +24,9 @@ def home():
 
 @app.route("/login")
 def login():
-    url=config["oauth2"]["url"]
-    id=url=config["oauth2"]["id"]
-    return redirect(f"https://discord.com/api/oauth2/authorize?client_id={id}&redirect_uri={url}%2Foauth%2Fcallback&response_type=code&scope=identify%20email")
+    url=config["oauth"]["url"]
+    id=config["oauth"]["id"]
+    return redirect(f"https://discord.com/api/oauth2/authorize?client_id={id}&redirect_uri={url}oauth/callback&response_type=code&scope=identify%20guilds%20email")
 
 
 @app.route("/logout")
@@ -38,7 +38,7 @@ def logout():
 @app.route("/oauth/callback")
 def oauth_callback():
     code = request.args["code"]
-    url=config["oauth2"]["url"]
+    url=config["oauth"]["url"]
     access_token = client.oauth.get_access_token(
         code, redirect_uri=f"{url}/oauth/callback"
     ).access_token
