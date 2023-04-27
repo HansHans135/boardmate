@@ -111,7 +111,7 @@
           <div class="chart-container">
             <div class="chart-info-wrapper">
               <h2>CPU</h2>
-              <span>100/{{resource["cpu"]}}%</span>
+              <span>{{now["cpu"]}}/{{resource["cpu"]}}%</span>
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@
           <div class="chart-container">
             <div class="chart-info-wrapper">
               <h2>記憶體</h2>
-              <span>1024/{{resource["memory"]}}MB</span>
+              <span>{{now["memory"]}}/{{resource["memory"]}}MB</span>
             </div>
           </div>
         </div>
@@ -127,7 +127,7 @@
           <div class="chart-container">
             <div class="chart-info-wrapper">
               <h2>空間</h2>
-              <span>1024/{{resource["disk"]}}MB</span>
+              <span>{{now["disk"]}}/{{resource["disk"]}}MB</span>
             </div>
           </div>
         </div>
@@ -135,7 +135,7 @@
           <div class="chart-container">
             <div class="chart-info-wrapper">
               <h2>數量</h2>
-              <span>1/{{resource["servers"]}}個</span>
+              <span>{{now["servers"]}}/{{resource["servers"]}}個</span>
             </div>
           </div>
         </div>
@@ -158,11 +158,12 @@
                 {% for i in server %}
                 <tr>
                   <td>{{i}}</td>
-                  <td>{{i["cpu"]}}</td>
-                  <td>{{i["memory"]}}</td>
-                  <td>{{i["disk"]}}</td>
+                  <td>{{server[i]["cpu"]}}%</td>
+                  <td>{{server[i]["memory"]}}MB</td>
+                  <td>{{server[i]["disk"]}}MB</td>
                   <td><button class="edit">編輯</button> <button class="del">刪除</button></td>
                 </tr>
+                {% endfor %}
               </table>
             </div>
 

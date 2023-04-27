@@ -3,7 +3,7 @@
         "bot_token": "",
         "client_secret": "",
         "url": "",
-        "id": ""
+        "id":""
     },
     "pterodactyl": {
         "url": "",
@@ -13,14 +13,12 @@
         "host": "0.0.0.0",
         "port": 3000
     },
-    "server": {
-        "node": {
-            "node_name1":1
-        },
-        "eggs": {
-            "egg_name1": {
-                "nest_id": 1,
-                "egg_id": 1
+    "server":{
+        "node":{},
+        "eggs":{
+            "egg_name1":{
+                "nest_id":1,
+                "egg_id":1
             }
         },
         "feature_limits": {
@@ -28,10 +26,13 @@
             "backups": 1
         },
         "default_resource": {
-            "memory": 128,
-            "disk": 512,
+            "memory": 1024,
+            "swap": 0,
+            "disk": 1024,
+            "io": 500,
             "cpu": 100,
             "servers":3
         }
     }
+    
 }
