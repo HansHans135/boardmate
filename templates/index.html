@@ -155,11 +155,12 @@
                   <td>空間</td>
                   <td>操作</td>
                 </tr>
+                {% for i in server %}
                 <tr>
-                  <td>awa</td>
-                  <td>100</td>
-                  <td>1024</td>
-                  <td>1024</td>
+                  <td>{{i}}</td>
+                  <td>{{i["cpu"]}}</td>
+                  <td>{{i["memory"]}}</td>
+                  <td>{{i["disk"]}}</td>
                   <td><button class="edit">編輯</button> <button class="del">刪除</button></td>
                 </tr>
               </table>

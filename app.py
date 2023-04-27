@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 from zenora import APIClient
+from pteropy import Pterodactyl_Application
 import json
-import pteropy
+
 app = Flask(__name__)
 
 with open("./setting.json", "r")as f:
@@ -9,6 +10,8 @@ with open("./setting.json", "r")as f:
 client = APIClient(config["oauth"]["bot_token"],
                    client_secret=config["oauth"]["client_secret"])
 app.config["SECRET_KEY"] = "mysecret"
+ptero = Pterodactyl_Application(
+    config["pterodactyl"]["url"], config["pterodactyl"]["key"])
 
 
 @app.route("/")
@@ -36,17 +39,44 @@ def home():
             }
         }
         with open("data/user.json", "w+")as f:
-            json.dump(data,f)
+            json.dump(data, f)
         with open("data/user.json", "r")as f:
             data = json.load(f)
         resource = data[str(current_user.id)]["resource"]
-    resource={
-            "memory": resource["memory"]+config["server"]["default_resource"]["memory"],
-            "disk": resource["disk"]+config["server"]["default_resource"]["disk"],
-            "cpu": resource["cpu"]+config["server"]["default_resource"]["cpu"],
-            "servers":resource["servers"]+config["server"]["default_resource"]["servers"]
+    resource = {
+        "memory": resource["memory"]+config["server"]["default_resource"]["memory"],
+        "disk": resource["disk"]+config["server"]["default_resource"]["disk"],
+        "cpu": resource["cpu"]+config["server"]["default_resource"]["cpu"],
+        "servers": resource["servers"]+config["server"]["default_resource"]["servers"]
+    }
+    url = f'{ptero.url}/api/application/users'
+    headers = {
+    "Authorization": f"Bearer {ptero.url}",
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "cookie": "pterodactyl_session=eyJpdiI6InhIVXp5ZE43WlMxUU1NQ1pyNWRFa1E9PSIsInZhbHVlIjoiQTNpcE9JV3FlcmZ6Ym9vS0dBTmxXMGtST2xyTFJvVEM5NWVWbVFJSnV6S1dwcTVGWHBhZzdjMHpkN0RNdDVkQiIsIm1hYyI6IjAxYTI5NDY1OWMzNDJlZWU2OTc3ZDYxYzIyMzlhZTFiYWY1ZjgwMjAwZjY3MDU4ZDYwMzhjOTRmYjMzNDliN2YifQ%253D%253D"
+}
+
+    response = requests.request('GET', url, data=payload, headers=headers)
+    for i in response.json()["data"]:
+        if i["attributes"]["email"] == current_user.email:
+            uid=i["attributes"]["id"]
+
+    url = f'{ptero.url}/api/application/servers'
+    headers = {
+        "Authorization": f"Bearer {ptero.key}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
         }
-    return render_template("index.html",resource=resource,user=current_user)
+
+    response = requests.request('GET', url, headers=headers)
+    server={}
+    for i in response.json()["data"]:
+        if i["attributes"]["user"] == uid:
+            server[i["attributes"]["name"]]=i["attributes"]["limits"]
+
+    return render_template("index.html", resource=resource, user=current_user,server=server)
+
 
 @app.route("/server/add")
 def add():
@@ -64,7 +94,8 @@ def add():
         resource = data[str(current_user.id)]["resource"]
     except:
         return redirect("/")
-    return render_template("add.html",resource=resource,user=current_user)
+    return render_template("add.html", resource=resource, user=current_user)
+
 
 @app.route("/login")
 def login():
