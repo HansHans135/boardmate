@@ -132,7 +132,7 @@ def home():
     get = get_user_server(current_user)
     if not request.values.get("new") == None:
         new = request.values.get("new")
-        return render_template("index.html", pas=new,resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+        return render_template("index.html", pas=new, resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
     else:
         return render_template("index.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
@@ -221,8 +221,9 @@ def add():
     else:
         return render_template("add.html", nodes=nodes, eggs=eggs, resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
+
 @app.route("/rpa")
-def dle(id):
+def rpa():
     access_token = session.get("access_token")
 
     if not access_token:
@@ -232,22 +233,30 @@ def dle(id):
     current_user = bearer_client.users.get_current_user()
     with open("data/user.json", "r")as f:
         udata = json.load(f)
-    password=''.join(
-            random.choice(string.ascii_letters + string.digits) for _ in range(20))
+    password = ''.join(
+        random.choice(string.ascii_letters + string.digits) for _ in range(20))
     key = config["pterodactyl"]["key"]
     url = f'{config["pterodactyl"]["url"]}api/application/users/{udata[str(current_user.id)]["id"]}'
     headers = {
-    "Authorization": "Bearer apikey",
-    "Accept": "application/json",
-    "Content-Type": "application/json",
-}
+        "Authorization": f"Bearer {key}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
     payload = {
+        "email": current_user.email,
+        "username": str(current_user.id),
+        "first_name": str(current_user.id),
+        "last_name": str(current_user.id),
+        "language": "en",
+        "password": password
+    }
 
-  "password": password
-}
-
-    response = requests.request('PATCH', url, data=json.dumps(payload), headers=headers)
+    response = requests.request(
+        'PATCH', url, data=json.dumps(payload), headers=headers)
+    print(response.json())
     return redirect(f"/?new={password}")
+
+
 @app.route("/server/del/<id>")
 def dle(id):
     access_token = session.get("access_token")
@@ -276,7 +285,6 @@ def dle(id):
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
-
 
         response = requests.request('DELETE', url, headers=headers)
     else:
