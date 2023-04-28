@@ -3,6 +3,8 @@ from zenora import APIClient
 from pteropy import Pterodactyl_Application
 import json
 import requests
+import string
+import random
 
 app = Flask(__name__)
 
@@ -12,8 +14,46 @@ def get_user_server(current_user):
         data = json.load(f)
     try:
         resource = data[str(current_user.id)]["resource"]
+        try:
+            uid=data[str(current_user.id)]["id"]
+        except:
+            key = config["pterodactyl"]["key"]
+            url = f'{config["pterodactyl"]["url"]}api/application/users'
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+
+            response = requests.request('GET', url, headers=headers)
+
+            for i in response.json()["data"]:
+                if i["attributes"]["email"] == current_user.email:
+                    uid = i["attributes"]["id"]
+            data[str(current_user.id)]["id"] = uid
+            with open("data/user.json", "w+")as f:
+                json.dump(data, f)
     except:
+        d = ptero.create_user(username=str(current_user.id), email=current_user.email, password=''.join(
+            random.choice(string.ascii_letters + string.digits) for _ in range(20)))
+        try:
+            uid = d["attributes"]["id"]
+        except:
+            key = config["pterodactyl"]["key"]
+            url = f'{config["pterodactyl"]["url"]}api/application/users'
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+
+            response = requests.request('GET', url, headers=headers)
+
+            for i in response.json()["data"]:
+                if i["attributes"]["email"] == current_user.email:
+                    uid = i["attributes"]["id"]
         data[str(current_user.id)] = {
+            "id": uid,
             "money": 0,
             "resource": {
                 "memory": 0,
@@ -35,19 +75,6 @@ def get_user_server(current_user):
         "servers": resource["servers"]+config["server"]["default_resource"]["servers"]
     }
     key = config["pterodactyl"]["key"]
-    url = f'{config["pterodactyl"]["url"]}api/application/users'
-    headers = {
-        "Authorization": f"Bearer {key}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-
-    response = requests.request('GET', url, headers=headers)
-    # print(response.json())
-    for i in response.json()["data"]:
-        if i["attributes"]["email"] == current_user.email:
-            uid = i["attributes"]["id"]
-
     url = f'{config["pterodactyl"]["url"]}api/application/servers'
     headers = {
         "Authorization": f"Bearer {key}",
@@ -102,7 +129,7 @@ def home():
     return render_template("index.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
 
-@app.route("/server/add")
+@app.route("/server/add",methods=["GET","POST"])
 def add():
     access_token = session.get("access_token")
 
@@ -111,8 +138,26 @@ def add():
 
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()
-    get=get_user_server(current_user)
-    return render_template("add.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+    get = get_user_server(current_user)
+    if request.method == "POST":
+        resource=get["resource"]
+        now=get["now"]
+        if int(request.form["cpu"]) > resource["cpu"]-now["cpu"]:
+            error="你沒有足夠的cpu"
+            return redirect(f"/server/add?error={error}")
+        if int(request.form["memory"]) > resource["memory"]-now["memory"]:
+            error="你沒有足夠的記憶體"
+            return redirect(f"/server/add?error={error}")
+        if int(request.form["disk"]) > resource["servers"]-now["servers"]:
+            error="你沒有足夠的空間"
+            return redirect(f"/server/add?error={error}")
+        return redirect(f"/")
+    if not request.values.get("error") == None:
+        error=request.values.get("error")
+        return render_template("add.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"],error=error)
+    else:
+        return render_template("add.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+    
 
 
 @app.route("/login")

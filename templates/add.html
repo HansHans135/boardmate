@@ -162,6 +162,10 @@
               <h2>新增伺服器</h2>
             </div>
             <div class="fo imtext">
+              {% if resource["servers"]-now["servers"] == 0 %}
+              <p>你已達最高創建數量</p>
+              {% else %}
+              <p>{{error}}</p>
               <form action="#" method="post">
                 <p>名稱</p>
                 <p><input type="text" name="name"></p>
@@ -174,6 +178,7 @@
                 <p><input type="submit" value="送出資料"></p>
             
             </form>
+            {% endif %}
             </div>
 
           </div>
