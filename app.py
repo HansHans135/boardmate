@@ -130,8 +130,11 @@ def home():
     current_user = bearer_client.users.get_current_user()
 
     get = get_user_server(current_user)
-
-    return render_template("index.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+    if not request.values.get("new") == None:
+        new = request.values.get("new")
+        return render_template("index.html", pas=new,resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+    else:
+        return render_template("index.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
 
 @app.route("/server/add", methods=["GET", "POST"])
@@ -218,7 +221,33 @@ def add():
     else:
         return render_template("add.html", nodes=nodes, eggs=eggs, resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
+@app.route("/rpa")
+def dle(id):
+    access_token = session.get("access_token")
 
+    if not access_token:
+        return render_template("login.html")
+
+    bearer_client = APIClient(access_token, bearer=True)
+    current_user = bearer_client.users.get_current_user()
+    with open("data/user.json", "r")as f:
+        udata = json.load(f)
+    password=''.join(
+            random.choice(string.ascii_letters + string.digits) for _ in range(20))
+    key = config["pterodactyl"]["key"]
+    url = f'{config["pterodactyl"]["url"]}api/application/users/{udata[str(current_user.id)]["id"]}'
+    headers = {
+    "Authorization": "Bearer apikey",
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+}
+    payload = {
+
+  "password": password
+}
+
+    response = requests.request('PATCH', url, data=json.dumps(payload), headers=headers)
+    return redirect(f"/?new={password}")
 @app.route("/server/del/<id>")
 def dle(id):
     access_token = session.get("access_token")

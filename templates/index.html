@@ -6,7 +6,11 @@
   <title>BoardMate Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
   <link rel="stylesheet" href="static/style.css">
-
+  <style>
+    .rpas{
+      background-color: green;
+    }
+  </style>
 </head>
 
 <body>
@@ -142,6 +146,28 @@
       </div>
       <div class="chart-row two">
         <div class="chart-container-wrapper big">
+          <div class="chart-container">
+            <div class="chart-container-header">
+              <h2>我的帳號</h2>
+            </div>
+            <div class="chart-container-wrapper">
+              <table>
+                <tr>
+                  <td>email</td>
+                  <td>密碼</td>
+                </tr>
+                <tr>
+                  <td>{{user.email}}</td>
+                  {% if not pas%}
+                    <td><a href="/rpas"><button class="rpas">點我重新創建</button></a></td>
+                  {% else %}
+                  <td>{{pas}}</td>
+                  {% endif %}
+                </tr>
+              </table>
+            </div>
+          </div>
+          <br>
           <div class="chart-container">
             <div class="chart-container-header">
               <h2>我的伺服器</h2>
