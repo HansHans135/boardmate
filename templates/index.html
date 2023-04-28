@@ -161,7 +161,7 @@
                   <td>{{server[i]["cpu"]}}%</td>
                   <td>{{server[i]["memory"]}}MB</td>
                   <td>{{server[i]["disk"]}}MB</td>
-                  <td><button class="edit">編輯</button> <button class="del">刪除</button></td>
+                  <td><a href='{{server[i]["url"]}}' target="_blank" ><button class="edit">查看</button></a> <a href='/server/del/{{server[i]["id"]}}'><button class="del">刪除</button></a></td>
                 </tr>
                 {% endfor %}
               </table>

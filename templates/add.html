@@ -7,15 +7,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
   <link rel="stylesheet" href="/static/style.css">
   <style>
-    .fo{
+    .fo {
       color: white;
-      
+
     }
-    input:focus{
+
+    input:focus {
       outline: none;
     }
-    input{
-      
+
+    input {
+
       border-radius: 5px;
       color: white;
       background-color: rgb(34, 34, 115);
@@ -162,23 +164,35 @@
               <h2>新增伺服器</h2>
             </div>
             <div class="fo imtext">
-              {% if resource["servers"]-now["servers"] == 0 %}
+              {% if resource["servers"]-now["servers"] <= 0 %}
               <p>你已達最高創建數量</p>
               {% else %}
               <p>{{error}}</p>
               <form action="#" method="post">
                 <p>名稱</p>
                 <p><input type="text" name="name"></p>
+                <p>類型</p>
+                <select required name="egg">
+                  {% for i in eggs %}
+                  <option>{{i}}</option>
+                  {% endfor %}
+                </select>
+                <p>節點</p>
+                <select required name="node">
+                  {% for i in nodes %}
+                  <option>{{i}}</option>
+                  {% endfor %}
+                </select>
                 <p>cpu</p>
                 <p><input name="cpu" type="number"></p>
                 <p>記憶體</p>
                 <p><input name="memory" type="number"></p>
                 <p>空間</p>
                 <p><input name="disk" type="number"></p>
-                <p><input type="submit" value="送出資料"></p>
-            
-            </form>
-            {% endif %}
+                <p><input type="submit" value="創建伺服器"></p>
+
+              </form>
+              {% endif %}
             </div>
 
           </div>

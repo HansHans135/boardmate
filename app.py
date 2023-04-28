@@ -15,7 +15,7 @@ def get_user_server(current_user):
     try:
         resource = data[str(current_user.id)]["resource"]
         try:
-            uid=data[str(current_user.id)]["id"]
+            uid = data[str(current_user.id)]["id"]
         except:
             key = config["pterodactyl"]["key"]
             url = f'{config["pterodactyl"]["url"]}api/application/users'
@@ -92,7 +92,12 @@ def get_user_server(current_user):
     }
     for i in response.json()["data"]:
         if i["attributes"]["user"] == uid:
+            purl = config["pterodactyl"]["url"]
+            id = i["attributes"]["identifier"]
+            url = f"{purl}server/{id}"
             server[i["attributes"]["name"]] = i["attributes"]["limits"]
+            server[i["attributes"]["name"]]["url"] = url
+            server[i["attributes"]["name"]]["id"] = i["attributes"]["id"]
             now["memory"] += i["attributes"]["limits"]["memory"]
             now["disk"] += i["attributes"]["limits"]["disk"]
             now["cpu"] += i["attributes"]["limits"]["cpu"]
@@ -129,7 +134,7 @@ def home():
     return render_template("index.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
 
-@app.route("/server/add",methods=["GET","POST"])
+@app.route("/server/add", methods=["GET", "POST"])
 def add():
     access_token = session.get("access_token")
 
@@ -140,24 +145,114 @@ def add():
     current_user = bearer_client.users.get_current_user()
     get = get_user_server(current_user)
     if request.method == "POST":
-        resource=get["resource"]
-        now=get["now"]
-        if int(request.form["cpu"]) > resource["cpu"]-now["cpu"]:
-            error="你沒有足夠的cpu"
+        with open("data/user.json", "r")as f:
+            udata = json.load(f)
+        resource = get["resource"]
+        now = get["now"]
+        if int(request.form["cpu"]) > resource["cpu"]-now["cpu"] or int(request.form["cpu"]) == 0:
+            error = "你沒有足夠的cpu"
             return redirect(f"/server/add?error={error}")
-        if int(request.form["memory"]) > resource["memory"]-now["memory"]:
-            error="你沒有足夠的記憶體"
+        if int(request.form["memory"]) > resource["memory"]-now["memory"] or int(request.form["memory"]) == 0:
+            error = "你沒有足夠的記憶體"
             return redirect(f"/server/add?error={error}")
-        if int(request.form["disk"]) > resource["servers"]-now["servers"]:
-            error="你沒有足夠的空間"
+        if int(request.form["disk"]) > resource["disk"]-now["disk"] or int(request.form["disk"]) == 0:
+            error = "你沒有足夠的空間"
             return redirect(f"/server/add?error={error}")
+        nid = str(config["server"]["node"][request.form["node"]])
+        key = config["pterodactyl"]["key"]
+        url = f'{config["pterodactyl"]["url"]}api/application/nodes/{nid}/allocations'
+        headers = {
+            "Authorization": f"Bearer {key}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+
+        response = requests.request('GET', url,  headers=headers)
+        t = False
+        for i in response.json()["data"]:
+            if t == False:
+                if i["attributes"]["assigned"] == False:
+                    allocation = i["attributes"]["id"]
+                    t = True
+
+        url = f'{config["pterodactyl"]["url"]}api/application/servers'
+        headers = {
+            "Authorization": f"Bearer {key}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "name": request.form["name"],
+            "user": udata[str(current_user.id)]["id"],
+            "egg": config["server"]["eggs"][request.form["egg"]]["egg_id"],
+            "docker_image": config["server"]["eggs"][request.form["egg"]]["docker_image"],
+            "startup": config["server"]["eggs"][request.form["egg"]]["startup"],
+            "environment": config["server"]["eggs"][request.form["egg"]]["environment"],
+            "limits": {
+                "memory": int(request.form["memory"]),
+                "swap": 0,
+                "disk": int(request.form["disk"]),
+                "io": 500,
+                "cpu": int(request.form["cpu"])
+            },
+            "feature_limits": {
+                "databases": config["server"]["feature_limits"]["databases"],
+                "backups": config["server"]["feature_limits"]["backups"]
+            },
+            "allocation": {
+                "default": allocation
+            }
+        }
+        response = requests.request(
+            'POST', url, data=json.dumps(payload), headers=headers)
         return redirect(f"/")
+    eggs = []
+    nodes = []
+    for i in config["server"]["eggs"]:
+        eggs.append(i)
+    for i in config["server"]["node"]:
+        nodes.append(i)
     if not request.values.get("error") == None:
-        error=request.values.get("error")
-        return render_template("add.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"],error=error)
+        error = request.values.get("error")
+        return render_template("add.html", nodes=nodes, eggs=eggs, resource=get["resource"], user=current_user, server=get["server"], now=get["now"], error=error)
     else:
-        return render_template("add.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
-    
+        return render_template("add.html", nodes=nodes, eggs=eggs, resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+
+
+@app.route("/server/del/<id>")
+def dle(id):
+    access_token = session.get("access_token")
+
+    if not access_token:
+        return render_template("login.html")
+
+    bearer_client = APIClient(access_token, bearer=True)
+    current_user = bearer_client.users.get_current_user()
+    with open("data/user.json", "r")as f:
+        udata = json.load(f)
+    key = config["pterodactyl"]["key"]
+    url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}'
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.request('GET', url, headers=headers)
+    if response.json()["attributes"]["user"] == udata[str(current_user.id)]["id"]:
+        print("y")
+        url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}'
+        headers = {
+            "Authorization": f"Bearer {key}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+
+
+        response = requests.request('DELETE', url, headers=headers)
+    else:
+        print("n")
+    return redirect(f"/")
 
 
 @app.route("/login")
