@@ -16,9 +16,14 @@
     "server":{
         "node":{},
         "eggs":{
-            "egg_name1":{
-                "nest_id":1,
-                "egg_id":1
+            "egg_name1":{    
+                "egg_id":1,
+                "docker_image": "quay.io/pterodactyl/core:java",
+                "startup": "java -Xms128M -Xmx128M -jar server.jar",
+                "environment": {
+                    "BUNGEE_VERSION": "latest",
+                    "SERVER_JARFILE": "bungeecord.jar"
+                }
             }
         },
         "feature_limits": {
