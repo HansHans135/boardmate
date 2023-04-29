@@ -142,7 +142,7 @@ def add():
     access_token = session.get("access_token")
 
     if not access_token:
-        return render_template("login.html")
+        return redirect(f"/")
 
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()
@@ -222,12 +222,76 @@ def add():
         return render_template("add.html", nodes=nodes, eggs=eggs, resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
 
+@app.route("/server/edit/<id>", methods=["GET", "POST"])
+def edit(id):
+    access_token = session.get("access_token")
+
+    if not access_token:
+        return redirect(f"/")
+    with open("data/user.json", "r")as f:
+        udata = json.load(f)
+    bearer_client = APIClient(access_token, bearer=True)
+    current_user = bearer_client.users.get_current_user()
+    get = get_user_server(current_user)
+    key = config["pterodactyl"]["key"]
+    url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}'
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.request('GET', url, headers=headers)
+    name=response.json()["attributes"]["name"]
+    if not response.json()["attributes"]["user"] == udata[str(current_user.id)]["id"]:
+        return redirect(f"/")
+    if request.method == "POST":
+        resource = get["resource"]
+        now = get["now"]
+        if int(request.form["cpu"]) > resource["cpu"]-now["cpu"]+response.json()["attributes"]["limits"]["cpu"] or int(request.form["cpu"]) == 0:
+            error = "你沒有足夠的cpu"
+            return redirect(f"/server/edit/{id}?error={error}")
+        if int(request.form["memory"]) > resource["memory"]-now["memory"]+response.json()["attributes"]["limits"]["memory"] or int(request.form["memory"]) == 0:
+            error = "你沒有足夠的記憶體"
+            return redirect(f"/server/edit/{id}?error={error}")
+        if int(request.form["disk"]) > resource["disk"]-now["disk"]+response.json()["attributes"]["limits"]["disk"] or int(request.form["disk"]) == 0:
+            error = "你沒有足夠的空間"
+            return redirect(f"/server/edit/{id}?error={error}")
+
+        url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}/build'
+        headers = {
+            "Authorization": f"Bearer {key}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            }
+        payload = {
+            "allocation": response.json()["attributes"]["allocation"],
+            "memory": int(request.form["memory"]),
+            "swap": 0,
+            "disk": int(request.form["disk"]),
+            "io": 500,
+            "cpu": int(request.form["cpu"]),
+            "threads": None,
+            "feature_limits": response.json()["attributes"]["feature_limits"]
+        }
+
+        response = requests.request(
+            'PATCH', url, data=json.dumps(payload), headers=headers)
+        return redirect(f"/")
+
+    if not request.values.get("error") == None:
+        error = request.values.get("error")
+        return render_template("edit.html", name=name,resource=get["resource"], user=current_user, server=get["server"], now=get["now"], error=error)
+    else:
+        return render_template("edit.html", name=name,resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+
+
 @app.route("/rpa")
 def rpa():
     access_token = session.get("access_token")
 
     if not access_token:
-        return render_template("login.html")
+        return redirect(f"/")
 
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()
@@ -262,7 +326,7 @@ def dle(id):
     access_token = session.get("access_token")
 
     if not access_token:
-        return render_template("login.html")
+        return redirect(f"/")
 
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()

@@ -186,6 +186,10 @@ button {
   background-color: green;
 }
 
+.look {
+  background-color: blue;
+}
+
 .nav-list {
   margin-top: 40px;
 }
