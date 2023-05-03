@@ -60,7 +60,7 @@
             首頁
           </a>
         </li>
-        <li class="nav-list-item active">
+        <li class="nav-list-item">
           <a class="nav-list-link" href="/server/add">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -71,7 +71,7 @@
             新增伺服器
           </a>
         </li>
-        <li class="nav-list-item">
+        <li class="nav-list-item active">
           <a class="nav-list-link" href="#">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -165,34 +165,63 @@
               <h2>新增伺服器</h2>
             </div>
             <div class="fo imtext">
-              {% if resource["servers"]-now["servers"] <= 0 %}
-              <p>你已達最高創建數量</p>
-              {% else %}
               <p>{{error}}</p>
-              <form action="#" method="post">
-                <p>名稱</p>
-                <p><input type="text" name="name"></p>
-                <select required name="egg">
-                  {% for i in eggs %}
-                  <option>{{i}}</option>
-                  {% endfor %}
-                </select>
-                <p>節點</p>
-                <select required name="node">
-                  {% for i in nodes %}
-                  <option>{{i}}</option>
-                  {% endfor %}
-                </select>
-                <p>cpu</p>
-                <p><input name="cpu" type="number"></p>
-                <p>記憶體</p>
-                <p><input name="memory" type="number"></p>
-                <p>空間</p>
-                <p><input name="disk" type="number"></p>
-                <p><input type="submit" value="創建伺服器"></p>
+              <table>
+                <tr>
+                  <td>
+                    <form action="shop/cpu" method="post">
+                      <p>cpu</p>
+                      <select required name="cpu">
+                        {% for i in shop["cpu"] %}
+                        <option value={{i}}>{{i}}% | {{shop["cpu"][i]}}$</option>
+                        {% endfor %}
+                      </select>
+                      <p><input type="submit" value="購買"></p>
 
-              </form>
-              {% endif %}
+                    </form>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <form action="shop/memory" method="post">
+                      <p>記憶體</p>
+                      <select required name="memory">
+                        {% for i in shop["memory"] %}
+                        <option value={{i}}>{{i}}MB | {{shop["memory"][i]}}$</option>
+                        {% endfor %}
+                      </select>
+                      <p><input type="submit" value="購買"></p>
+
+                    </form>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <form action="shop/disk" method="post">
+                      <p>空間</p>
+                      <select required name="disk">
+                        {% for i in shop["disk"] %}
+                        <option value={{i}}>{{i}}MB | {{shop["disk"][i]}}$</option>
+                        {% endfor %}
+                      </select>
+                      <p><input type="submit" value="購買"></p>
+
+                    </form>
+                  </td>
+                </tr>
+                <td>
+                  <form action="shop/server" method="post">
+                    <p>伺服器</p>
+                    <select required name="server">
+                      {% for i in shop["server"] %}
+                      <option value={{i}}>{{i}}</option>
+                      {% endfor %}
+                    </select>
+                    <p><input type="submit" value="購買"></p>
+
+                  </form>
+                </td>
+                </tr>
             </div>
 
           </div>

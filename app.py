@@ -355,6 +355,20 @@ def dle(id):
         print("n")
     return redirect(f"/")
 
+@app.route("/shop")
+def shop():
+    access_token = session.get("access_token")
+
+    if not access_token:
+        return redirect(f"/")
+
+    bearer_client = APIClient(access_token, bearer=True)
+    current_user = bearer_client.users.get_current_user()
+
+    get = get_user_server(current_user)
+    
+    return render_template("shop.html", shop=config["shop"],resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+
 
 @app.route("/login")
 def login():

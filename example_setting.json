@@ -3,7 +3,7 @@
         "bot_token": "",
         "client_secret": "",
         "url": "",
-        "id":""
+        "id": ""
     },
     "pterodactyl": {
         "url": "",
@@ -13,11 +13,11 @@
         "host": "0.0.0.0",
         "port": 3000
     },
-    "server":{
-        "node":{},
-        "eggs":{
-            "egg_name1":{    
-                "egg_id":1,
+    "server": {
+        "node": {},
+        "eggs": {
+            "egg_name1": {
+                "egg_id": 1,
                 "docker_image": "quay.io/pterodactyl/core:java",
                 "startup": "java -Xms128M -Xmx128M -jar server.jar",
                 "environment": {
@@ -36,8 +36,25 @@
             "disk": 1024,
             "io": 500,
             "cpu": 100,
-            "servers":3
+            "servers": 3
+        }
+    },
+    "shop": {
+        "cpu": {
+            "50": 10,
+            "100": 20
+        },
+        "memory": {
+            "512": 10,
+            "1024": 20
+        },
+        "disk": {
+            "512": 10,
+            "1024": 20
+        },
+        "server": {
+            "1": 10,
+            "2": 15
         }
     }
-    
 }
