@@ -242,7 +242,7 @@ def edit(id):
     }
 
     response = requests.request('GET', url, headers=headers)
-    name=response.json()["attributes"]["name"]
+    name = response.json()["attributes"]["name"]
     if not response.json()["attributes"]["user"] == udata[str(current_user.id)]["id"]:
         return redirect(f"/")
     if request.method == "POST":
@@ -263,7 +263,7 @@ def edit(id):
             "Authorization": f"Bearer {key}",
             "Accept": "application/json",
             "Content-Type": "application/json",
-            }
+        }
         payload = {
             "allocation": response.json()["attributes"]["allocation"],
             "memory": int(request.form["memory"]),
@@ -281,9 +281,9 @@ def edit(id):
 
     if not request.values.get("error") == None:
         error = request.values.get("error")
-        return render_template("edit.html", name=name,resource=get["resource"], user=current_user, server=get["server"], now=get["now"], error=error)
+        return render_template("edit.html", name=name, resource=get["resource"], user=current_user, server=get["server"], now=get["now"], error=error)
     else:
-        return render_template("edit.html", name=name,resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+        return render_template("edit.html", name=name, resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
 
 @app.route("/rpa")
@@ -355,6 +355,7 @@ def dle(id):
         print("n")
     return redirect(f"/")
 
+
 @app.route("/shop")
 def shop():
     access_token = session.get("access_token")
@@ -366,9 +367,30 @@ def shop():
     current_user = bearer_client.users.get_current_user()
 
     get = get_user_server(current_user)
-    
-    return render_template("shop.html", shop=config["shop"],resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+    with open(f"data/user.json", "r")as f:
+        data = json.load(f)
+    money = data[str(current_user.id)]["money"]
+    return render_template("shop.html", money=money, shop=config["shop"], resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
+
+@app.route("/shop/<mode>", methods=["POST"])
+def shopmode(mode):
+    access_token = session.get("access_token")
+
+    if not access_token:
+        return redirect(f"/")
+
+    bearer_client = APIClient(access_token, bearer=True)
+    current_user = bearer_client.users.get_current_user()
+
+    get = get_user_server(current_user)
+    with open(f"data/user.json", "r")as f:
+        data = json.load(f)
+    
+    if config["shop"][mode][request.form[mode]] <= data[str(current_user.id)]["money"]:
+        money = data[str(current_user.id)]["money"]
+        new_money=money-config["shop"][mode][request.form[mode]]
+        
 
 @app.route("/login")
 def login():
