@@ -388,8 +388,13 @@ def shopmode(mode):
         data = json.load(f)
     
     if config["shop"][mode][request.form[mode]] <= data[str(current_user.id)]["money"]:
-        money = data[str(current_user.id)]["money"]
-        new_money=money-config["shop"][mode][request.form[mode]]
+        data[str(current_user.id)]["money"]-=config["shop"][mode][request.form[mode]]
+        data[str(current_user.id)]["resource"][mode]+=int(request.form[mode])
+        with open(f"data/user.json", "w")as f:
+            json.dump(data,f)
+        return redirect(f"/")
+    else:
+        return redirect(f"/shop?error=你沒有足夠的錢錢")
         
 
 @app.route("/login")
