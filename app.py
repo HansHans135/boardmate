@@ -386,19 +386,51 @@ def shopmode(mode):
     get = get_user_server(current_user)
     with open(f"data/user.json", "r")as f:
         data = json.load(f)
-    nmode=mode
-    if mode=="servers":
-        nmode="server"
+    nmode = mode
+    if mode == "servers":
+        nmode = "server"
     if config["shop"][nmode][request.form[mode]] <= data[str(current_user.id)]["money"]:
-        
-        data[str(current_user.id)]["money"]-=config["shop"][nmode][request.form[mode]]
-        data[str(current_user.id)]["resource"][mode]+=int(request.form[mode])
+
+        data[str(current_user.id)
+             ]["money"] -= config["shop"][nmode][request.form[mode]]
+        data[str(current_user.id)]["resource"][mode] += int(request.form[mode])
         with open(f"data/user.json", "w")as f:
-            json.dump(data,f)
+            json.dump(data, f)
         return redirect(f"/")
     else:
         return redirect(f"/shop?error=你沒有足夠的錢錢")
-        
+
+
+@app.route("/code", methods=["POST", "GET"])
+def codes():
+    access_token = session.get("access_token")
+    if not access_token:
+        return redirect(f"/")
+    bearer_client = APIClient(access_token, bearer=True)
+    current_user = bearer_client.users.get_current_user()
+    get = get_user_server(current_user)
+    if request.method == "POST":
+        with open(f"data/code.json", "r")as f:
+            data = json.load(f)
+        try:
+            code=data[request.form["code"]]
+            if len(code["user"]) == 0:
+                return redirect(f"/code?error=代碼已被使用完畢")
+            else:
+                with open(f"data/user.json", "r")as f:
+                    udata = json.load(f)
+                code["user"].append(current_user.id)
+                data[request.form["code"]]=code
+                udata[str(current_user.id)]["money"]+=code["money"]
+                with open(f"data/user.json", "w")as f:
+                    json.dump(udata, f)
+                with open(f"data/code.json", "w")as f:
+                    json.dump(data, f)
+                return redirect(f"/shop")
+        except:
+            return redirect(f"/code?error=錯誤的代碼")
+    return render_template("code.html", shop=config["shop"], resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+
 
 @app.route("/login")
 def login():
