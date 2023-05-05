@@ -386,6 +386,7 @@ def shopmode(mode):
     get = get_user_server(current_user)
     with open(f"data/user.json", "r")as f:
         data = json.load(f)
+    nmode=mode
     if mode=="servers":
         nmode="server"
     if config["shop"][nmode][request.form[mode]] <= data[str(current_user.id)]["money"]:
