@@ -414,7 +414,7 @@ def codes():
             data = json.load(f)
         try:
             code=data[request.form["code"]]
-            if len(code["user"]) == 0:
+            if len(code["user"]) == code["use"]:
                 return redirect(f"/code?error=代碼已被使用完畢")
             else:
                 with open(f"data/user.json", "r")as f:
