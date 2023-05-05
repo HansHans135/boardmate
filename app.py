@@ -417,6 +417,8 @@ def codes():
             if len(code["user"]) == code["use"]:
                 return redirect(f"/code?error=代碼已被使用完畢")
             else:
+                if current_user.id in code["user"]:
+                    return redirect(f"/code?error=你已經兌換過")
                 with open(f"data/user.json", "r")as f:
                     udata = json.load(f)
                 code["user"].append(current_user.id)
