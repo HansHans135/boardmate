@@ -14,7 +14,10 @@
 
 # 截圖
 demo: https://shop.mycard.lol/<br>
-照片預留
+![圖一](https://github.com/HansHans135/boardmate/blob/main/img/1.PNG)
+![圖二](https://github.com/HansHans135/boardmate/blob/main/img/2.PNG)
+![圖三](https://github.com/HansHans135/boardmate/blob/main/img/3.PNG)
+![圖四](https://github.com/HansHans135/boardmate/blob/main/img/4.PNG)
 
 <br>
 
