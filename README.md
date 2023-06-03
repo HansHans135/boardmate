@@ -13,7 +13,7 @@
 <br>
 
 # 截圖
-demo: https://fmdb.mycard.lol/<br>
+demo: https://shop.mycard.lol/<br>
 照片預留
 
 <br>
