@@ -117,8 +117,11 @@ client = APIClient(config["oauth"]["bot_token"],
 app.config["SECRET_KEY"] = "mysecret"
 ptero = Pterodactyl_Application(
     config["pterodactyl"]["url"], config["pterodactyl"]["key"])
-
-
+@app.route("/rc")
+def rc():
+    with open("./setting.json", "r")as f:
+        config = json.load(f)
+    return redirect(f"/")
 @app.route("/")
 def home():
     access_token = session.get("access_token")
@@ -161,6 +164,20 @@ def add():
         if int(request.form["disk"]) > resource["disk"]-now["disk"] or int(request.form["disk"]) == 0:
             error = "你沒有足夠的空間"
             return redirect(f"/server/add?error={error}")
+        
+        if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
+            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
+            error = f"此類型最大空間是 {up}MB"
+            return redirect(f"/server/add?error={error}")
+        if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
+            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
+            error = f"此類型最大CPU是 {up}%"
+            return redirect(f"/server/add?error={error}")
+        if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
+            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
+            error = f"此類型最大記憶體是 {up}MB"
+            return redirect(f"/server/add?error={error}")
+
         nid = str(config["server"]["node"][request.form["node"]])
         key = config["pterodactyl"]["key"]
         url = f'{config["pterodactyl"]["url"]}api/application/nodes/{nid}/allocations'
