@@ -9,7 +9,8 @@
 > 無痛安裝<br>
 > 簡易配置<br>
 > 自動化流程<br>
-> discord登入
+> discord登入<br>
+> 提供[api](https://github.com/HansHans135/boardmate/blob/main/api.md)
 
 <br>
 
