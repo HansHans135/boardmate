@@ -23,7 +23,7 @@ demo: https://shop.mycard.lol/<br>
 <br>
 
 # 安裝與配置
-參考[此說明](#安裝)
+參考[此說明](https://github.com/HansHans135/boardmate/blob/main/install.md)
 
 <br>
 
