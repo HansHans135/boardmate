@@ -14,18 +14,10 @@
         "port": 3000
     },
     "server": {
-        "node": {},
-        "eggs": {
-            "egg_name1": {
-                "egg_id": 1,
-                "docker_image": "quay.io/pterodactyl/core:java",
-                "startup": "java -Xms128M -Xmx128M -jar server.jar",
-                "environment": {
-                    "BUNGEE_VERSION": "latest",
-                    "SERVER_JARFILE": "bungeecord.jar"
-                }
-            }
+        "node": {
+            "節點1":1
         },
+        "eggs": {},
         "feature_limits": {
             "databases": 0,
             "backups": 1
