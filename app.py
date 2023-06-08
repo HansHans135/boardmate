@@ -295,7 +295,20 @@ def edit(id):
         if int(request.form["disk"]) > resource["disk"]-now["disk"]+response.json()["attributes"]["limits"]["disk"] or int(request.form["disk"]) == 0:
             error = "你沒有足夠的空間"
             return redirect(f"/server/edit/{id}?error={error}")
-
+        
+        if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
+            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
+            error = f"此類型最大空間是 {up}MB"
+            return redirect(f"/server/add?error={error}")
+        if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
+            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
+            error = f"此類型最大CPU是 {up}%"
+            return redirect(f"/server/add?error={error}")
+        if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
+            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
+            error = f"此類型最大記憶體是 {up}MB"
+            return redirect(f"/server/add?error={error}")
+        
         url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}/build'
         headers = {
             "Authorization": f"Bearer {key}",
