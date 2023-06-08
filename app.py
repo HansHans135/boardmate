@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 from zenora import APIClient
 from pteropy import Pterodactyl_Application
+from datetime import datetime,timezone,timedelta
 import json
 import requests
 import string
@@ -8,7 +9,12 @@ import random
 
 app = Flask(__name__)
 
-
+def get_now():
+    dt1 = datetime.utcnow().replace(tzinfo=timezone.utc)
+    dt2 = dt1.astimezone(timezone(timedelta(hours=8)))
+    now = dt2.strftime("%Y-%m-%d %H:%M:%S")
+    return now
+    
 def get_user_server(current_user):
     with open("data/user.json", "r")as f:
         data = json.load(f)
@@ -117,11 +123,26 @@ client = APIClient(config["oauth"]["bot_token"],
 app.config["SECRET_KEY"] = "mysecret"
 ptero = Pterodactyl_Application(
     config["pterodactyl"]["url"], config["pterodactyl"]["key"])
+
+try:
+    api_log=open("data/api.txt","r",encoding="utf-8")
+    api_key = api_log.read().split("\n")[0]
+    api_log.close()
+except:
+    api_log=open("data/api.txt","w+",encoding="utf-8")
+    api_key = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(40))
+    api_log.write(f"{api_key}\n")
+    api_log.close()
+
+def w_log(text):
+    with open("data/api.txt","a+",encoding="utf-8")as f:
+        f.write(text)
 @app.route("/rc")
 def rc():
     with open("./setting.json", "r")as f:
         config = json.load(f)
     return redirect(f"/")
+
 @app.route("/")
 def home():
     access_token = session.get("access_token")
@@ -450,7 +471,26 @@ def codes():
             return redirect(f"/code?error=錯誤的代碼")
     return render_template("code.html", shop=config["shop"], resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
-
+@app.route("/api/code", methods=["POST"])
+def api_code():
+    if request.form["key"] != api_key:
+        return jsonify({"code":403})
+    try:
+        name=request.form["name"]
+        use=int(request.form["use"])
+        money=int(request.form["money"])
+        with open(f"data/code.json", "r")as f:
+            data=json.load(f)
+        data[name]={}
+        data[name]["use"]=use
+        data[name]["user"]=[]
+        data[name]["money"]=money
+        with open(f"data/code.json", "w+")as f:
+            json.dump(data, f)
+        w_log(f"{get_now()} | 新增了代碼: {name}\n")
+        return jsonify({"code":200})
+    except:
+         return jsonify({"code":400})
 @app.route("/login")
 def login():
     url = config["oauth"]["url"]
