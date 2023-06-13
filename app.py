@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 from zenora import APIClient
 from pteropy import Pterodactyl_Application
-from datetime import datetime,timezone,timedelta
+from datetime import datetime, timezone, timedelta
 import json
 import requests
 import string
@@ -9,12 +9,15 @@ import random
 
 app = Flask(__name__)
 
+
 def get_now():
     dt1 = datetime.utcnow().replace(tzinfo=timezone.utc)
     dt2 = dt1.astimezone(timezone(timedelta(hours=8)))
     now = dt2.strftime("%Y-%m-%d %H:%M:%S")
     return now
-    
+
+
+import time
 def get_user_server(current_user):
     with open("data/user.json", "r")as f:
         data = json.load(f)
@@ -81,14 +84,6 @@ def get_user_server(current_user):
         "servers": resource["servers"]+config["server"]["default_resource"]["servers"]
     }
     key = config["pterodactyl"]["key"]
-    url = f'{config["pterodactyl"]["url"]}api/application/servers'
-    headers = {
-        "Authorization": f"Bearer {key}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-
-    response = requests.request('GET', url, headers=headers)
     server = {}
     now = {
         "memory": 0,
@@ -96,14 +91,34 @@ def get_user_server(current_user):
         "cpu": 0,
         "servers": 0
     }
-    for i in response.json()["data"]:
+    tf = True
+    sdata = []
+    url = f'{config["pterodactyl"]["url"]}api/application/servers'
+    while tf:
+
+        headers = {
+            "Authorization": f"Bearer {key}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            }
+
+        response = requests.request('GET', url, headers=headers)
+        try:
+            url = response.json()["meta"]["pagination"]["links"]["next"]
+        except:
+            tf = False
+        for i in response.json()["data"]:
+            sdata.append(i)
+    for i in sdata:
         if i["attributes"]["user"] == uid:
             purl = config["pterodactyl"]["url"]
             id = i["attributes"]["identifier"]
             url = f"{purl}server/{id}"
-            server[i["attributes"]["name"]] = i["attributes"]["limits"]
-            server[i["attributes"]["name"]]["url"] = url
-            server[i["attributes"]["name"]]["id"] = i["attributes"]["id"]
+            server[i["attributes"]["identifier"]] = i["attributes"]["limits"]
+            server[i["attributes"]["identifier"]]["url"] = url
+            server[i["attributes"]["identifier"]]["id"] = i["attributes"]["id"]
+            server[i["attributes"]["identifier"]
+                ]["name"] = i["attributes"]["name"]
             now["memory"] += i["attributes"]["limits"]["memory"]
             now["disk"] += i["attributes"]["limits"]["disk"]
             now["cpu"] += i["attributes"]["limits"]["cpu"]
@@ -123,26 +138,37 @@ client = APIClient(config["oauth"]["bot_token"],
 app.config["SECRET_KEY"] = "mysecret"
 ptero = Pterodactyl_Application(
     config["pterodactyl"]["url"], config["pterodactyl"]["key"])
-add_work=[]
+add_work = []
 try:
-    api_log=open("data/api.txt","r",encoding="utf-8")
+    api_log = open("data/api.txt","r",encoding="utf-8")
     api_key = api_log.read().split("\n")[0]
     api_log.close()
 except:
-    api_log=open("data/api.txt","w+",encoding="utf-8")
-    api_key = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(40))
+    api_log = open("data/api.txt","w+",encoding="utf-8")
+    api_key = ''.join(random.choice(string.ascii_letters + \
+                      string.digits) for _ in range(40))
     api_log.write(f"{api_key}\n")
     api_log.close()
 
+
+
 def w_log(text):
-    with open("data/api.txt","a+",encoding="utf-8")as f:
+    with open("data/api.txt", "a+",encoding="utf-8")as f:
         f.write(text)
+
+
+@app.route("/work")
+def work():
+    print(add_work)
+    return redirect(f"/")
+
 
 @app.route("/rc")
 def rc():
     with open("./setting.json", "r")as f:
         config = json.load(f)
     return redirect(f"/")
+
 
 @app.route("/")
 def home():
@@ -174,6 +200,14 @@ def add():
     get = get_user_server(current_user)
     if request.method == "POST":
         if current_user.id in add_work:
+            add_work.remove(current_user.id)
+            return render_template("working.html")
+        else:
+            add_work.append(current_user.id)
+        time.sleep(0.5)
+        get = get_user_server(current_user)
+        if current_user.id in add_work:
+            add_work.remove(current_user.id)
             return render_template("working.html")
         else:
             add_work.append(current_user.id)
@@ -190,17 +224,20 @@ def add():
         if int(request.form["disk"]) > resource["disk"]-now["disk"] or int(request.form["disk"]) == 0:
             error = "你沒有足夠的空間"
             return redirect(f"/server/add?error={error}")
-        
+        if resource["servers"]-now["servers"] <= 0:
+            error = "你沒有足夠的伺服器"
+            return redirect(f"/server/add?error={error}")
+
         if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
-            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
+            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
             error = f"此類型最大空間是 {up}MB"
             return redirect(f"/server/add?error={error}")
         if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
-            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
+            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
             error = f"此類型最大CPU是 {up}%"
             return redirect(f"/server/add?error={error}")
         if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
-            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
+            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
             error = f"此類型最大記憶體是 {up}MB"
             return redirect(f"/server/add?error={error}")
 
@@ -252,7 +289,7 @@ def add():
         response = requests.request(
             'POST', url, data=json.dumps(payload), headers=headers)
         add_work.remove(current_user.id)
-        return redirect(f"/")
+
     eggs = []
     nodes = []
     for i in config["server"]["eggs"]:
@@ -301,20 +338,20 @@ def edit(id):
         if int(request.form["disk"]) > resource["disk"]-now["disk"]+response.json()["attributes"]["limits"]["disk"] or int(request.form["disk"]) == 0:
             error = "你沒有足夠的空間"
             return redirect(f"/server/edit/{id}?error={error}")
-        
+
         if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
-            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
+            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
             error = f"此類型最大空間是 {up}MB"
             return redirect(f"/server/add?error={error}")
         if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
-            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
+            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
             error = f"此類型最大CPU是 {up}%"
             return redirect(f"/server/add?error={error}")
         if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
-            up=config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
+            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
             error = f"此類型最大記憶體是 {up}MB"
             return redirect(f"/server/add?error={error}")
-        
+
         url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}/build'
         headers = {
             "Authorization": f"Bearer {key}",
@@ -470,7 +507,7 @@ def codes():
         with open(f"data/code.json", "r")as f:
             data = json.load(f)
         try:
-            code=data[request.form["code"]]
+            code = data[request.form["code"]]
             if len(code["user"]) == code["use"]:
                 return redirect(f"/code?error=代碼已被使用完畢")
             else:
@@ -479,8 +516,8 @@ def codes():
                 with open(f"data/user.json", "r")as f:
                     udata = json.load(f)
                 code["user"].append(current_user.id)
-                data[request.form["code"]]=code
-                udata[str(current_user.id)]["money"]+=code["money"]
+                data[request.form["code"]] = code
+                udata[str(current_user.id)]["money"] += code["money"]
                 with open(f"data/user.json", "w")as f:
                     json.dump(udata, f)
                 with open(f"data/code.json", "w")as f:
@@ -490,26 +527,29 @@ def codes():
             return redirect(f"/code?error=錯誤的代碼")
     return render_template("code.html", shop=config["shop"], resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
+
 @app.route("/api/code", methods=["POST"])
 def api_code():
     if request.form["key"] != api_key:
-        return jsonify({"code":403})
+        return jsonify({"code": 403})
     try:
-        name=request.form["name"]
-        use=int(request.form["use"])
-        money=int(request.form["money"])
+        name = request.form["name"]
+        use = int(request.form["use"])
+        money = int(request.form["money"])
         with open(f"data/code.json", "r")as f:
-            data=json.load(f)
-        data[name]={}
-        data[name]["use"]=use
-        data[name]["user"]=[]
-        data[name]["money"]=money
+            data = json.load(f)
+        data[name] = {}
+        data[name]["use"] = use
+        data[name]["user"] = []
+        data[name]["money"] = money
         with open(f"data/code.json", "w+")as f:
             json.dump(data, f)
         w_log(f"{get_now()} | 新增了代碼: {name}\n")
-        return jsonify({"code":200})
+        return jsonify({"code": 200})
     except:
-         return jsonify({"code":400})
+        return jsonify({"code": 400})
+
+
 @app.route("/login")
 def login():
     url = config["oauth"]["url"]
