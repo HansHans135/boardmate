@@ -123,7 +123,7 @@ client = APIClient(config["oauth"]["bot_token"],
 app.config["SECRET_KEY"] = "mysecret"
 ptero = Pterodactyl_Application(
     config["pterodactyl"]["url"], config["pterodactyl"]["key"])
-
+add_work=[]
 try:
     api_log=open("data/api.txt","r",encoding="utf-8")
     api_key = api_log.read().split("\n")[0]
@@ -137,6 +137,7 @@ except:
 def w_log(text):
     with open("data/api.txt","a+",encoding="utf-8")as f:
         f.write(text)
+
 @app.route("/rc")
 def rc():
     with open("./setting.json", "r")as f:
@@ -172,6 +173,10 @@ def add():
     current_user = bearer_client.users.get_current_user()
     get = get_user_server(current_user)
     if request.method == "POST":
+        if current_user.id in add_work:
+            return render_template("working.html")
+        else:
+            add_work.append(current_user.id)
         with open("data/user.json", "r")as f:
             udata = json.load(f)
         resource = get["resource"]
@@ -246,6 +251,7 @@ def add():
         }
         response = requests.request(
             'POST', url, data=json.dumps(payload), headers=headers)
+        add_work.remove(current_user.id)
         return redirect(f"/")
     eggs = []
     nodes = []
