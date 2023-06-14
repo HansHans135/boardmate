@@ -2,8 +2,6 @@
 
 Date : 2023-06-14 10:32:53
 
-Directory c:\\Users\\Hans\\OneDrive - apps.ntpc.edu.tw\\桌面\\孤單一人\\資料夾們\\程式\\python\\個人\\boardmate
-
 Total : 20 files,  2842 codes, 14 comments, 338 blanks, all 3194 lines
 
 Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-details.md)
