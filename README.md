@@ -43,5 +43,5 @@ demo: https://shop.mycard.lol/<br>
 也歡迎幫此項目按star
 
 # 關於
-遵守MIT License
-主題來源 https://codepen.io/aybukeceylan/pen/poEqdWZ
+遵守MIT License<br>
+
