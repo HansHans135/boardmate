@@ -117,6 +117,7 @@ def get_user_server(current_user):
             server[i["attributes"]["identifier"]] = i["attributes"]["limits"]
             server[i["attributes"]["identifier"]]["url"] = url
             server[i["attributes"]["identifier"]]["id"] = i["attributes"]["id"]
+            server[i["attributes"]["identifier"]]["description"] = i["attributes"]["description"]
             server[i["attributes"]["identifier"]
                 ]["name"] = i["attributes"]["name"]
             now["memory"] += i["attributes"]["limits"]["memory"]
