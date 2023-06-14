@@ -28,6 +28,7 @@ demo: https://shop.mycard.lol/<br>
 | 託管 | 連結 |
 | ---- | ---- |
 | FMDB免費機器人託管 | https://discord.gg/xqJ8hub4Qc |
+| NewLand託管編程 | https://discord.gg/S5JAwrzY2K |
 
 <br>
 
