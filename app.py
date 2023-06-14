@@ -199,18 +199,14 @@ def add():
     current_user = bearer_client.users.get_current_user()
     get = get_user_server(current_user)
     if request.method == "POST":
-        if current_user.id in add_work:
-            add_work.remove(current_user.id)
-            return render_template("working.html")
-        else:
-            add_work.append(current_user.id)
-        time.sleep(0.5)
         get = get_user_server(current_user)
         if current_user.id in add_work:
             add_work.remove(current_user.id)
             return render_template("working.html")
         else:
             add_work.append(current_user.id)
+            time.sleep(0.5)
+
         with open("data/user.json", "r")as f:
             udata = json.load(f)
         resource = get["resource"]
@@ -291,8 +287,11 @@ def add():
         }
         response = requests.request(
             'POST', url, data=json.dumps(payload), headers=headers)
-        add_work.remove(current_user.id)
-
+        try:
+            add_work.remove(current_user.id)
+        except:
+            pass
+        return redirect(f"/")
     eggs = []
     nodes = []
     for i in config["server"]["eggs"]:
