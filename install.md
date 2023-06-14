@@ -77,10 +77,10 @@ flask
 - 你會得到
 ```json
 "Node.js": {
-    "max_resource": {//最高資源限制
-        "memory": 512,
-        "disk": 1024,
-        "cpu": 80
+    "max_resource": {//最高資源限制(0為不限制)
+        "memory": 0,
+        "disk": 0,
+        "cpu": 0
     },
     "egg_id": 19, //此egg在面板上的id
     "startup": "if [[ -d .git ]] && [[ {{AUTO_UPDATE}} == '1' ]]; then git pull; fi; if [[ ! -z ${NODE_PACKAGES} ]]; then /usr/local/bin/npm install ${NODE_PACKAGES}; fi; if [[ ! -z ${UNNODE_PACKAGES} ]]; then /usr/local/bin/npm uninstall ${UNNODE_PACKAGES}; fi; if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi; /usr/local/bin/node /home/container/{{JS_FILE}}",

@@ -11,9 +11,9 @@ for i in all:
         eggs[data["name"]] = {}
         eggs[data["name"]]["egg_id"] = 0
         eggs[data["name"]]["max_resource"] = {
-            "memory": 512,
-            "disk": 1024,
-            "cpu": 80
+            "memory": 0,
+            "disk": 0,
+            "cpu": 0
         },
         eggs[data["name"]]["startup"] = data["startup"].replace('"', "'")
         for d in data["docker_images"]:

@@ -227,19 +227,22 @@ def add():
         if resource["servers"]-now["servers"] <= 0:
             error = "你沒有足夠的伺服器"
             return redirect(f"/server/add?error={error}")
-
-        if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
-            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
-            error = f"此類型最大空間是 {up}MB"
-            return redirect(f"/server/add?error={error}")
-        if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
-            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
-            error = f"此類型最大CPU是 {up}%"
-            return redirect(f"/server/add?error={error}")
-        if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
-            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
-            error = f"此類型最大記憶體是 {up}MB"
-            return redirect(f"/server/add?error={error}")
+        
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"] !=0:
+            if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
+                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
+                error = f"此類型最大空間是 {up}MB"
+                return redirect(f"/server/add?error={error}")
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] !=0:
+            if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
+                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
+                error = f"此類型最大CPU是 {up}%"
+                return redirect(f"/server/add?error={error}")
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] !=0:
+            if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
+                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
+                error = f"此類型最大記憶體是 {up}MB"
+                return redirect(f"/server/add?error={error}")
 
         nid = str(config["server"]["node"][request.form["node"]])
         key = config["pterodactyl"]["key"]
@@ -339,19 +342,22 @@ def edit(id):
             error = "你沒有足夠的空間"
             return redirect(f"/server/edit/{id}?error={error}")
 
-        if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
-            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
-            error = f"此類型最大空間是 {up}MB"
-            return redirect(f"/server/add?error={error}")
-        if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
-            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
-            error = f"此類型最大CPU是 {up}%"
-            return redirect(f"/server/add?error={error}")
-        if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
-            up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
-            error = f"此類型最大記憶體是 {up}MB"
-            return redirect(f"/server/add?error={error}")
-
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"] !=0:
+            if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
+                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
+                error = f"此類型最大空間是 {up}MB"
+                return redirect(f"/server/add?error={error}")
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] !=0:
+            if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
+                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
+                error = f"此類型最大CPU是 {up}%"
+                return redirect(f"/server/add?error={error}")
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] !=0:
+            if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
+                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
+                error = f"此類型最大記憶體是 {up}MB"
+                return redirect(f"/server/add?error={error}")
+            
         url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}/build'
         headers = {
             "Authorization": f"Bearer {key}",
@@ -549,6 +555,15 @@ def api_code():
     except:
         return jsonify({"code": 400})
 
+#等我有時間
+@app.route("/api/top")
+def api_top():
+    if request.values.get("error") != api_key:
+        return jsonify({"code": 403})
+    try:
+        return jsonify({"code": 200})
+    except:
+        return jsonify({"code": 400})
 
 @app.route("/login")
 def login():
