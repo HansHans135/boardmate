@@ -23,6 +23,14 @@ demo: https://shop.mycard.lol/<br>
 
 <br>
 
+# 用戶與信任
+
+| 託管 | 連結 |
+| ---- | ---- |
+| FMDB免費機器人託管 | https://discord.gg/xqJ8hub4Qc |
+
+<br>
+
 # 安裝與配置
 參考[此說明](https://github.com/HansHans135/boardmate/blob/main/install.md)
 
