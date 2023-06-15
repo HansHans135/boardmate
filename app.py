@@ -324,8 +324,12 @@ def edit(id):
         "Accept": "application/json",
         "Content-Type": "application/json",
     }
-
     response = requests.request('GET', url, headers=headers)
+
+    for i in config["server"]["eggs"]:
+        if config["server"]["eggs"][i]["egg_id"] == response.json()["attributes"]["egg"]:
+            egg=i
+    
     name = response.json()["attributes"]["name"]
     if not response.json()["attributes"]["user"] == udata[str(current_user.id)]["id"]:
         return redirect(f"/")
@@ -342,19 +346,19 @@ def edit(id):
             error = "你沒有足夠的空間"
             return redirect(f"/server/edit/{id}?error={error}")
 
-        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"] !=0:
-            if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
-                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
+        if config["server"]["eggs"][egg]["max_resource"]["disk"] !=0:
+            if int(request.form["disk"]) > config["server"]["eggs"][egg]["max_resource"]["disk"]:
+                up = config["server"]["eggs"][egg]["max_resource"]["disk"]
                 error = f"此類型最大空間是 {up}MB"
                 return redirect(f"/server/add?error={error}")
-        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] !=0:
-            if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
-                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
+        if config["server"]["eggs"][egg]["max_resource"]["cpu"] !=0:
+            if int(request.form["cpu"]) > config["server"]["eggs"][egg]["max_resource"]["cpu"]:
+                up = config["server"]["eggs"][egg]["max_resource"]["cpu"]
                 error = f"此類型最大CPU是 {up}%"
                 return redirect(f"/server/add?error={error}")
-        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] !=0:
-            if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
-                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
+        if config["server"]["eggs"][egg]["max_resource"]["cpu"] !=0:
+            if int(request.form["memory"]) > config["server"]["eggs"][egg]["max_resource"]["memory"]:
+                up = config["server"]["eggs"][egg]["max_resource"]["memory"]
                 error = f"此類型最大記憶體是 {up}MB"
                 return redirect(f"/server/add?error={error}")
             
