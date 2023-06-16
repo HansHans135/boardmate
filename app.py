@@ -249,10 +249,20 @@ def add():
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
+        tf=True
+        ports=[]
+        while tf:
+            response = requests.request('GET', url,  headers=headers)
 
-        response = requests.request('GET', url,  headers=headers)
+            try:
+                url=response.json()["meta"]["pagination"]["links"]["next"]
+            except:
+                tf=False
+            for i in response.json()["data"]:
+                ports.append(i)
+
         t = False
-        for i in response.json()["data"]:
+        for i in ports:
             if t == False:
                 if i["attributes"]["assigned"] == False:
                     allocation = i["attributes"]["id"]
@@ -288,6 +298,7 @@ def add():
         }
         response = requests.request(
             'POST', url, data=json.dumps(payload), headers=headers)
+        print(response.json())
         try:
             add_work.remove(current_user.id)
         except:
