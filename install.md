@@ -19,11 +19,11 @@ flask
     "oauth": {
         "bot_token": "", //discord app機器人token
         "client_secret": "", //discord app用戶端secret
-        "url": "", //此面板網址(用於oauth登入導向 請將CUSTOM URL設為 http://your.url/oauth/callback)
+        "url": "http://your.url/", //此面板網址(用於oauth登入導向 請將CUSTOM URL設為 http://your.url/oauth/callback/)
         "id": "" //discord app id
     },
     "pterodactyl": {
-        "url": "",  //pterodactyl面板網址
+        "url": "http://yourpterodactyl.url/",  //pterodactyl面板網址
         "key": "" //pterodactyl面板kpi key
     },
     "boardmate": {
