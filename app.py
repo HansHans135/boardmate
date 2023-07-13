@@ -1,3 +1,4 @@
+import time
 from flask import Flask, render_template, request, redirect, session, jsonify
 from zenora import APIClient
 from pteropy import Pterodactyl_Application
@@ -17,7 +18,6 @@ def get_now():
     return now
 
 
-import time
 def get_user_server(current_user):
     with open("data/user.json", "r")as f:
         data = json.load(f)
@@ -27,16 +27,26 @@ def get_user_server(current_user):
             uid = data[str(current_user.id)]["id"]
         except:
             key = config["pterodactyl"]["key"]
+            sdata = []
             url = f'{config["pterodactyl"]["url"]}api/application/users'
-            headers = {
-                "Authorization": f"Bearer {key}",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            }
+            while tf:
 
-            response = requests.request('GET', url, headers=headers)
+                headers = {
+                    "Authorization": f"Bearer {key}",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                }
 
-            for i in response.json()["data"]:
+                response = requests.request('GET', url, headers=headers)
+                try:
+                    url = response.json()[
+                        "meta"]["pagination"]["links"]["next"]
+                except:
+                    tf = False
+                for i in response.json()["data"]:
+                    sdata.append(i)
+
+            for i in sdata:
                 if i["attributes"]["email"] == current_user.email:
                     uid = i["attributes"]["id"]
             data[str(current_user.id)]["id"] = uid
@@ -49,16 +59,28 @@ def get_user_server(current_user):
             uid = d["attributes"]["id"]
         except:
             key = config["pterodactyl"]["key"]
+            sdata = []
             url = f'{config["pterodactyl"]["url"]}api/application/users'
-            headers = {
-                "Authorization": f"Bearer {key}",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            }
+            while tf:
 
-            response = requests.request('GET', url, headers=headers)
+                headers = {
+                    "Authorization": f"Bearer {key}",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                }
 
-            for i in response.json()["data"]:
+                response = requests.request('GET', url, headers=headers)
+                try:
+                    url = response.json()[
+                        "meta"]["pagination"]["links"]["next"]
+                except:
+                    tf = False
+                for i in response.json()["data"]:
+                    sdata.append(i)
+
+   
+
+            for i in sdata:
                 if i["attributes"]["email"] == current_user.email:
                     uid = i["attributes"]["id"]
         data[str(current_user.id)] = {
@@ -100,7 +122,7 @@ def get_user_server(current_user):
             "Authorization": f"Bearer {key}",
             "Accept": "application/json",
             "Content-Type": "application/json",
-            }
+        }
 
         response = requests.request('GET', url, headers=headers)
         try:
@@ -117,9 +139,10 @@ def get_user_server(current_user):
             server[i["attributes"]["identifier"]] = i["attributes"]["limits"]
             server[i["attributes"]["identifier"]]["url"] = url
             server[i["attributes"]["identifier"]]["id"] = i["attributes"]["id"]
-            server[i["attributes"]["identifier"]]["description"] = i["attributes"]["description"]
             server[i["attributes"]["identifier"]
-                ]["name"] = i["attributes"]["name"]
+                   ]["description"] = i["attributes"]["description"]
+            server[i["attributes"]["identifier"]
+                   ]["name"] = i["attributes"]["name"]
             now["memory"] += i["attributes"]["limits"]["memory"]
             now["disk"] += i["attributes"]["limits"]["disk"]
             now["cpu"] += i["attributes"]["limits"]["cpu"]
@@ -141,20 +164,19 @@ ptero = Pterodactyl_Application(
     config["pterodactyl"]["url"], config["pterodactyl"]["key"])
 add_work = []
 try:
-    api_log = open("data/api.txt","r",encoding="utf-8")
+    api_log = open("data/api.txt", "r", encoding="utf-8")
     api_key = api_log.read().split("\n")[0]
     api_log.close()
 except:
-    api_log = open("data/api.txt","w+",encoding="utf-8")
-    api_key = ''.join(random.choice(string.ascii_letters + \
+    api_log = open("data/api.txt", "w+", encoding="utf-8")
+    api_key = ''.join(random.choice(string.ascii_letters +
                       string.digits) for _ in range(40))
     api_log.write(f"{api_key}\n")
     api_log.close()
 
 
-
 def w_log(text):
-    with open("data/api.txt", "a+",encoding="utf-8")as f:
+    with open("data/api.txt", "a+", encoding="utf-8")as f:
         f.write(text)
 
 
@@ -224,20 +246,23 @@ def add():
         if resource["servers"]-now["servers"] <= 0:
             error = "你沒有足夠的伺服器"
             return redirect(f"/server/add?error={error}")
-        
-        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"] !=0:
+
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"] != 0:
             if int(request.form["disk"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]:
-                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["disk"]
+                up = config["server"]["eggs"][request.form["egg"]
+                                              ]["max_resource"]["disk"]
                 error = f"此類型最大空間是 {up}MB"
                 return redirect(f"/server/add?error={error}")
-        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] !=0:
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] != 0:
             if int(request.form["cpu"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]:
-                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"]
+                up = config["server"]["eggs"][request.form["egg"]
+                                              ]["max_resource"]["cpu"]
                 error = f"此類型最大CPU是 {up}%"
                 return redirect(f"/server/add?error={error}")
-        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] !=0:
+        if config["server"]["eggs"][request.form["egg"]]["max_resource"]["cpu"] != 0:
             if int(request.form["memory"]) > config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]:
-                up = config["server"]["eggs"][request.form["egg"]]["max_resource"]["memory"]
+                up = config["server"]["eggs"][request.form["egg"]
+                                              ]["max_resource"]["memory"]
                 error = f"此類型最大記憶體是 {up}MB"
                 return redirect(f"/server/add?error={error}")
 
@@ -249,15 +274,15 @@ def add():
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
-        tf=True
-        ports=[]
+        tf = True
+        ports = []
         while tf:
             response = requests.request('GET', url,  headers=headers)
 
             try:
-                url=response.json()["meta"]["pagination"]["links"]["next"]
+                url = response.json()["meta"]["pagination"]["links"]["next"]
             except:
-                tf=False
+                tf = False
             for i in response.json()["data"]:
                 ports.append(i)
 
@@ -339,8 +364,8 @@ def edit(id):
 
     for i in config["server"]["eggs"]:
         if config["server"]["eggs"][i]["egg_id"] == response.json()["attributes"]["egg"]:
-            egg=i
-    
+            egg = i
+
     name = response.json()["attributes"]["name"]
     if not response.json()["attributes"]["user"] == udata[str(current_user.id)]["id"]:
         return redirect(f"/")
@@ -357,22 +382,22 @@ def edit(id):
             error = "你沒有足夠的空間"
             return redirect(f"/server/edit/{id}?error={error}")
 
-        if config["server"]["eggs"][egg]["max_resource"]["disk"] !=0:
+        if config["server"]["eggs"][egg]["max_resource"]["disk"] != 0:
             if int(request.form["disk"]) > config["server"]["eggs"][egg]["max_resource"]["disk"]:
                 up = config["server"]["eggs"][egg]["max_resource"]["disk"]
                 error = f"此類型最大空間是 {up}MB"
                 return redirect(f"/server/add?error={error}")
-        if config["server"]["eggs"][egg]["max_resource"]["cpu"] !=0:
+        if config["server"]["eggs"][egg]["max_resource"]["cpu"] != 0:
             if int(request.form["cpu"]) > config["server"]["eggs"][egg]["max_resource"]["cpu"]:
                 up = config["server"]["eggs"][egg]["max_resource"]["cpu"]
                 error = f"此類型最大CPU是 {up}%"
                 return redirect(f"/server/add?error={error}")
-        if config["server"]["eggs"][egg]["max_resource"]["cpu"] !=0:
+        if config["server"]["eggs"][egg]["max_resource"]["cpu"] != 0:
             if int(request.form["memory"]) > config["server"]["eggs"][egg]["max_resource"]["memory"]:
                 up = config["server"]["eggs"][egg]["max_resource"]["memory"]
                 error = f"此類型最大記憶體是 {up}MB"
                 return redirect(f"/server/add?error={error}")
-            
+
         url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}/build'
         headers = {
             "Authorization": f"Bearer {key}",
@@ -570,7 +595,9 @@ def api_code():
     except:
         return jsonify({"code": 400})
 
-#等我有時間
+# 等我有時間
+
+
 @app.route("/api/top")
 def api_top():
     if request.values.get("error") != api_key:
@@ -579,6 +606,7 @@ def api_top():
         return jsonify({"code": 200})
     except:
         return jsonify({"code": 400})
+
 
 @app.route("/login")
 def login():
