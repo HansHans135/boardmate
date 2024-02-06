@@ -13,6 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" defer></script>
   <script src="/static/assets/js/charts-lines.js" defer></script>
   <script src="/static/assets/js/charts-pie.js" defer></script>
+  <script src="/static/assets/js/get_server.js" defer></script>
 </head>
 
 <body>
@@ -313,8 +314,8 @@
                 <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   CPU
                 </p>
-                <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                  {{now["cpu"]}}/{{resource["cpu"]}}%
+                <p id="cpu" class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Loading
                 </p>
               </div>
             </div>
@@ -339,8 +340,8 @@
                 <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   記憶體
                 </p>
-                <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                  {{now["memory"]}}/{{resource["memory"]}}MB
+                <p id="memory" class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Loading
                 </p>
               </div>
             </div>
@@ -372,8 +373,8 @@
                 <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   空間
                 </p>
-                <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                  {{now["disk"]}}/{{resource["disk"]}}MB
+                <p id="disk" class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Loading
                 </p>
               </div>
             </div>
@@ -397,8 +398,8 @@
                 <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   數量
                 </p>
-                <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                  {{now["servers"]}}/{{resource["servers"]}}個
+                <p id="servers" class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Loading
                 </p>
               </div>
             </div>

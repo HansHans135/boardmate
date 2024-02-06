@@ -180,11 +180,17 @@ def w_log(text):
         f.write(text)
 
 
-@app.route("/work")
-def work():
-    print(add_work)
-    return redirect(f"/")
 
+@app.route("/api/servers")
+def web_get_user_server():
+    access_token = session.get("access_token")
+
+    if not access_token:
+        return redirect(f"/")
+
+    bearer_client = APIClient(access_token, bearer=True)
+    current_user = bearer_client.users.get_current_user()
+    return jsonify(get_user_server(current_user))
 
 @app.route("/rc")
 def rc():
@@ -203,12 +209,12 @@ def home():
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()
 
-    get = get_user_server(current_user)
     if not request.values.get("new") == None:
         new = request.values.get("new")
-        return render_template("index.html", pas=new, resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+        return render_template("index.html", pas=new, user=current_user)
     else:
-        return render_template("index.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+        return render_template("index.html",user=current_user)
+    #return render_template("index.html", resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
 
 
 @app.route("/server/add", methods=["GET", "POST"])
@@ -352,7 +358,6 @@ def edit(id):
         udata = json.load(f)
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()
-    get = get_user_server(current_user)
     key = config["pterodactyl"]["key"]
     url = f'{config["pterodactyl"]["url"]}api/application/servers/{id}'
     headers = {
@@ -370,6 +375,7 @@ def edit(id):
     if not response.json()["attributes"]["user"] == udata[str(current_user.id)]["id"]:
         return redirect(f"/")
     if request.method == "POST":
+        get=get_user_server(current_user)
         resource = get["resource"]
         now = get["now"]
         if int(request.form["cpu"]) > resource["cpu"]-now["cpu"]+response.json()["attributes"]["limits"]["cpu"] or int(request.form["cpu"]) == 0:
@@ -421,9 +427,9 @@ def edit(id):
 
     if not request.values.get("error") == None:
         error = request.values.get("error")
-        return render_template("edit.html", name=name, resource=get["resource"], user=current_user, server=get["server"], now=get["now"], error=error)
+        return render_template("edit.html", name=name, user=current_user, error=error)
     else:
-        return render_template("edit.html", name=name, resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+        return render_template("edit.html", name=name, user=current_user)
 
 
 @app.route("/rpa")
@@ -505,12 +511,10 @@ def shop():
 
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()
-
-    get = get_user_server(current_user)
     with open(f"data/user.json", "r")as f:
         data = json.load(f)
     money = data[str(current_user.id)]["money"]
-    return render_template("shop.html", money=money, shop=config["shop"], resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+    return render_template("shop.html", money=money, shop=config["shop"], user=current_user)
 
 
 @app.route("/shop/<mode>", methods=["POST"])
@@ -522,8 +526,6 @@ def shopmode(mode):
 
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()
-
-    get = get_user_server(current_user)
     with open(f"data/user.json", "r")as f:
         data = json.load(f)
     nmode = mode
@@ -548,7 +550,6 @@ def codes():
         return redirect(f"/")
     bearer_client = APIClient(access_token, bearer=True)
     current_user = bearer_client.users.get_current_user()
-    get = get_user_server(current_user)
     if request.method == "POST":
         with open(f"data/code.json", "r")as f:
             data = json.load(f)
@@ -571,7 +572,7 @@ def codes():
                 return redirect(f"/shop")
         except:
             return redirect(f"/code?error=錯誤的代碼")
-    return render_template("code.html", shop=config["shop"], resource=get["resource"], user=current_user, server=get["server"], now=get["now"])
+    return render_template("code.html", shop=config["shop"], user=current_user)
 
 
 @app.route("/api/code", methods=["POST"])

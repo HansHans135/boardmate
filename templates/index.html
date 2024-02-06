@@ -6,13 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BoardMate Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/assets/css/tailwind.output.css" />
+  <link rel="stylesheet" href="./static/assets/css/tailwind.output.css" />
   <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-  <script src="/static/assets/js/init-alpine.js"></script>
+  <script src="./static/assets/js/init-alpine.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" defer></script>
-  <script src="/static/assets/js/charts-lines.js" defer></script>
-  <script src="/static/assets/js/charts-pie.js" defer></script>
+  <script src="./static/assets/js/charts-lines.js" defer></script>
+  <script src="./static/assets/js/charts-pie.js" defer></script>
+  <script src="./static/assets/js/get_server.js" defer></script>
 </head>
 
 <body>
@@ -312,8 +313,8 @@
                 <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   CPU
                 </p>
-                <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                  {{now["cpu"]}}/{{resource["cpu"]}}%
+                <p id="cpu" class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Loading
                 </p>
               </div>
             </div>
@@ -338,8 +339,8 @@
                 <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   記憶體
                 </p>
-                <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                  {{now["memory"]}}/{{resource["memory"]}}MB
+                <p id="memory" class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Loading
                 </p>
               </div>
             </div>
@@ -371,8 +372,8 @@
                 <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   空間
                 </p>
-                <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                  {{now["disk"]}}/{{resource["disk"]}}MB
+                <p id="disk" class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Loading
                 </p>
               </div>
             </div>
@@ -396,8 +397,8 @@
                 <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   數量
                 </p>
-                <p class="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                  {{now["servers"]}}/{{resource["servers"]}}個
+                <p id="servers" class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                  Loading
                 </p>
               </div>
             </div>
@@ -417,50 +418,7 @@
                     <th class="px-4 py-3">操作</th>
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
-                  {% for i in server %}
-                  <tr class="text-gray-700 dark:text-gray-400">
-                    <td class="px-4 py-3">
-                      <div class="flex items-center text-sm">
-                        <!-- Avatar with inset shadow -->
-
-                        <div>
-                          <p class="font-semibold">{{server[i]["name"]}}</p>
-                          <p class="text-xs text-gray-600 dark:text-gray-400">
-                            {{server[i]["description"]}}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 text-sm">
-                      {{server[i]["cpu"]}}%
-                    </td>
-                    <td class="px-4 py-3 text-sm">
-                      {{server[i]["memory"]}}MB
-                    </td>
-                    <td class="px-4 py-3 text-sm">
-                      {{server[i]["disk"]}}MB
-                    </td>
-                    <td class="px-4 py-3 text-xs">
-                      <a href='{{server[i]["url"]}}'>
-                        <span
-                          class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
-                          查看
-                        </span></a>
-                      <a href='/server/edit/{{server[i]["id"]}}'>
-                        <span
-                          class="px-2 py-1 font-semibold leading-tight text-gray-700 bg-gray-100 rounded-full dark:text-gray-100 dark:bg-gray-700">
-                          編輯
-                        </span></a>
-                      <a href='/server/del/{{server[i]["id"]}}'>
-                        <span
-                          class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full dark:text-red-100 dark:bg-red-700">
-                          刪除
-                        </span></a>
-                    </td>
-
-                  </tr>
-                  {% endfor %}
+                <tbody id="serverTableBody" class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
                 </tbody>
               </table>
             </div>
@@ -496,10 +454,10 @@
                   class="block w-full pr-20 mt-1 text-sm text-black dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray form-input" />
                 {% endif %}
                 <a href="/rpa">
-                <button
-                  class="absolute inset-y-0 right-0 px-4 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-r-md active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
-                  重新產生
-                </button></a>
+                  <button
+                    class="absolute inset-y-0 right-0 px-4 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-r-md active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
+                    重新產生
+                  </button></a>
               </div>
             </label>
 
