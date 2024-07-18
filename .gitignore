@@ -1,7 +1,10 @@
 setting.json
 test.py
 key.txt
-api.py
 sus.json
 sus.html
 sus.py
+data/api.txt
+data/node_1_allocation_tmp.cache
+data/user_tmp.cache
+data/server_tmp.cache

@@ -1,1 +1,12 @@
-{"851062442330816522": {"id": 1, "money": 1, "resource": {"memory": 5120, "disk": 10, "cpu": 50, "servers": 0}}}
+{
+    "851062442330816522": {
+        "id": 1,
+        "money": 0,
+        "resource": {
+            "memory": 1536,
+            "disk": 3072,
+            "cpu": 15000,
+            "servers": 3
+        }
+    }
+}

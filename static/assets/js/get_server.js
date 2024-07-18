@@ -18,18 +18,14 @@ fetch(url)
         const serverstextToUpdate = `${jsonData.now.servers}/${jsonData.resource.servers}`;
         serversTag.textContent = serverstextToUpdate;
 
-        // 获取表格的tbody元素
         const serverTableBody = document.getElementById('serverTableBody');
 
-        // 遍历服务器对象并动态生成HTML代码
         for (const serverId in jsonData.server) {
             const server = jsonData.server[serverId];
 
-            // 创建一个新的<tr>元素
             const row = document.createElement('tr');
             row.classList.add('text-gray-700', 'dark:text-gray-400');
 
-            // 创建<td>元素并添加内容
             const nameCell = document.createElement('td');
             nameCell.classList.add('px-4', 'py-3');
             nameCell.innerHTML = `
@@ -60,7 +56,7 @@ fetch(url)
             const actionCell = document.createElement('td');
             actionCell.classList.add('px-4', 'py-3', 'text-xs');
             actionCell.innerHTML = `
-                      <a href='${server.url}'>
+                      <a href='${server.url}' ,target='_blank'>
                         <span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
                           查看
                         </span>
@@ -77,8 +73,6 @@ fetch(url)
                       </a>
                     `;
             row.appendChild(actionCell);
-
-            // 将新的<tr>元素添加到表格中
             serverTableBody.appendChild(row);
         }
     })
