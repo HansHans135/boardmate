@@ -1,12 +1,17 @@
+import random
+import string
 from flask import Blueprint, jsonify, redirect, session, render_template
 from utils.dc import Dc
 from utils.ptero_api import Ptero
 import json
 import asyncio
 import threading
+import time
 from flask import request
 
 SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
+ADD_TMP={}
+CHEAK_TMP={}
 dc = Dc(SETTING["oauth"]["bot_token"])
 home = Blueprint("home", __name__)
 ptero = Ptero(SETTING["pterodactyl"]["key"], SETTING["pterodactyl"]["url"])
@@ -70,6 +75,11 @@ async def index_server_add():
         return redirect("/login")
     current_user = await dc.get_discord_user(access_token)
     if request.method == "POST":
+        if str(current_user.id) in ADD_TMP:
+            if ADD_TMP[str(current_user.id)]-int(time.time())>0:
+                await asyncio.sleep(3)
+                return render_template("msg.html",message="你按的有點快，等一下再試試吧")
+        ADD_TMP[str(current_user.id)]=int(time.time())+10
         server_name = request.form["name"]
         server_memory = int(request.form["memory"])
         server_cpu = int(request.form["cpu"])
@@ -103,7 +113,6 @@ async def index_server_add():
         tmp_data += server,
         with open("data/server_tmp.cache", "w", encoding="utf-8") as f:
             json.dump(tmp_data, f, indent=4)
-
         return redirect("/")
     return render_template("add.html", user=current_user, eggs=SETTING["server"]["eggs"], nodes=SETTING["server"]["node"])
 
@@ -115,15 +124,22 @@ async def index_server_del(server_identifier):
         return redirect("/login")
     current_user = await dc.get_discord_user(access_token)
     if request.values.get("check"):
-        servers = await ptero.search_all_data(current_user.email, current_user.id)
-        servers = servers["server"]
-        for i in servers:
-            if i == server_identifier:
-                await ptero.delete_server(i)
-                return render_template("msg.html",message="刪除成功")
-        return render_template("msg.html", message="伺服器不存在")
+        if server_identifier in CHEAK_TMP:
+            if request.values.get("check")==CHEAK_TMP[server_identifier]:
+                servers = await ptero.search_all_data(current_user.email, current_user.id)
+                servers = servers["server"]
+                for i in servers:
+                    if i == server_identifier:
+                        await ptero.delete_server(i)
+                        return render_template("msg.html",message="刪除成功")
+                return render_template("msg.html", message="伺服器不存在")
+            else:
+                return render_template("msg.html",message="授權失敗")
+        return render_template("msg.html",message="授權失敗")
     else:
-        return render_template("del_check.html",identifier=server_identifier)
+        check_token=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
+        CHEAK_TMP[server_identifier]=check_token
+        return render_template("del_check.html",identifier=server_identifier,token=check_token)
 
 @home.route("/server/edit/<server_identifier>", methods=["GET", "POST"])
 async def index_server_edit(server_identifier):

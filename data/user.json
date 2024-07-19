@@ -3,10 +3,10 @@
         "id": 1,
         "money": 0,
         "resource": {
-            "memory": 0,
-            "disk": 0,
-            "cpu": 0,
-            "servers": 0
+            "memory": 1000000,
+            "disk": 10000000,
+            "cpu": 10000000,
+            "servers": 125847
         }
     }
 }
