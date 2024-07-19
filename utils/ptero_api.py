@@ -121,6 +121,10 @@ class Ptero:
             resource = json.load(f)[str(u_id)]["resource"]
         user_data = await self.search_user(email)
         server = await self.search_server(user_data["id"])
+        resource["memory"]+=SETTING["server"]["default_resource"]["memory"]
+        resource["cpu"]+=SETTING["server"]["default_resource"]["cpu"]
+        resource["disk"]+=SETTING["server"]["default_resource"]["disk"]
+        resource["servers"]+=SETTING["server"]["default_resource"]["servers"]
         now, server = server
         return {"now": server, "resource": resource, "server": now}
     
@@ -146,7 +150,7 @@ class Ptero:
                 data["password"]=password
         return data
     
-    async def edit_user(self,u_id):
+    async def edit_user(self,u_id,email,username):
         password=secrets.token_urlsafe()
         data={
             "username": username,
@@ -159,6 +163,7 @@ class Ptero:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.patch(f'{self.base_url}api/application/users/{u_id}', data=json.dumps(data)) as response:
                 data = await response.json()
+                print(data)
                 data=data["attributes"]
                 data["password"]=password
         print(data)

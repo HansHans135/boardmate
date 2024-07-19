@@ -22,17 +22,16 @@ async def index_home():
     with open("data/user.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     if user==None:
-        
         user_data=await ptero.create_user(current_user.email, current_user.id)
         uid=user_data["id"]
         data[str(current_user.id)] = {
             "id": uid,
             "money": 0,
             "resource": {
-                "memory": SETTING["server"]["default_resource"]["memory"],
-                "disk": SETTING["server"]["default_resource"]["disk"],
-                "cpu": SETTING["server"]["default_resource"]["cpu"],
-                "servers": SETTING["server"]["default_resource"]["servers"]
+                "memory": 0,
+                "disk": 0,
+                "cpu": 0,
+                "servers": 0
             }
         }
         with open("data/user.json", "w", encoding="utf-8") as f:
@@ -43,10 +42,10 @@ async def index_home():
             "id": uid,
             "money": 0,
             "resource": {
-                "memory": SETTING["server"]["default_resource"]["memory"],
-                "disk": SETTING["server"]["default_resource"]["disk"],
-                "cpu": SETTING["server"]["default_resource"]["cpu"],
-                "servers": SETTING["server"]["default_resource"]["servers"]
+                "memory": 0,
+                "disk": 0,
+                "cpu": 0,
+                "servers": 0
             }
         }
         with open("data/user.json", "w", encoding="utf-8") as f:
@@ -58,11 +57,11 @@ async def index_home():
 async def index_rpa():
     access_token = session.get("access_token")
     if not access_token:
-        return render_template("login.html")
+        return redirect("/")
     current_user = await dc.get_discord_user(access_token)
     user=await ptero.search_user(current_user.email)
-    user_data=await ptero.edit_user(user["id"])
-    return redirect(f"/?passwd={user_data["password"]}")
+    user_data=await ptero.edit_user(username=current_user.id,u_id=user["id"],email=current_user.email)
+    return redirect(f"/?passwd={user_data['password']}")
 
 @home.route("/server/add", methods=["GET", "POST"])
 async def index_server_add():
