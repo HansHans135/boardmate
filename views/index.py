@@ -78,7 +78,7 @@ async def index_server_add():
         if str(current_user.id) in ADD_TMP:
             if ADD_TMP[str(current_user.id)]-int(time.time())>0:
                 await asyncio.sleep(3)
-                return render_template("msg.html",message="你按的有點快，等一下再試試吧")
+                return render_template("msg.html",message="你按的有點快，等一下再試試吧",href=False)
         ADD_TMP[str(current_user.id)]=int(time.time())+10
         server_name = request.form["name"]
         server_memory = int(request.form["memory"])
@@ -92,13 +92,13 @@ async def index_server_add():
         now = servers["now"]
         resource = servers["resource"]
         if now["servers"]+1 > resource["servers"]:
-            return render_template("msg.html", message="已達伺服器數量上限")
+            return render_template("msg.html", message="已達伺服器數量上限",href=False)
         if server_cpu <= 0 or now["cpu"]+server_cpu > resource["cpu"]:
-            return render_template("msg.html", message="你沒有足夠的CPU")
+            return render_template("msg.html", message="你沒有足夠的CPU",href=False)
         if server_memory <= 0 or now["memory"]+server_memory > resource["memory"]:
-            return render_template("msg.html", message="你沒有足夠的記憶體")
+            return render_template("msg.html", message="你沒有足夠的記憶體",href=False)
         if server_disk <= 0 or now["disk"]+server_disk > resource["disk"]:
-            return render_template("msg.html", message="你沒有足夠的空間")
+            return render_template("msg.html", message="你沒有足夠的空間",href=False)
 
         server = await ptero.create_server(
             ptero_user_id=ptero_user_id,
@@ -109,10 +109,7 @@ async def index_server_add():
             server_node=server_node,
             server_egg=server_egg
         )
-        tmp_data = await ptero.get_servers()
-        tmp_data += server,
-        with open("data/server_tmp.cache", "w", encoding="utf-8") as f:
-            json.dump(tmp_data, f, indent=4)
+        
         return redirect("/")
     return render_template("add.html", user=current_user, eggs=SETTING["server"]["eggs"], nodes=SETTING["server"]["node"])
 
@@ -131,11 +128,11 @@ async def index_server_del(server_identifier):
                 for i in servers:
                     if i == server_identifier:
                         await ptero.delete_server(i)
-                        return render_template("msg.html",message="刪除成功")
-                return render_template("msg.html", message="伺服器不存在")
+                        return render_template("msg.html",message="刪除成功",href="/")
+                return render_template("msg.html", message="伺服器不存在",href="/")
             else:
-                return render_template("msg.html",message="授權失敗")
-        return render_template("msg.html",message="授權失敗")
+                return render_template("msg.html",message="授權失敗",href="/")
+        return render_template("msg.html",message="授權失敗",href="/")
     else:
         check_token=''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
         CHEAK_TMP[server_identifier]=check_token
@@ -157,7 +154,7 @@ async def index_server_edit(server_identifier):
                 old_servers=servers["server"][i]
                 break
         if not old_servers:
-            return render_template("msg.html", message="伺服器不存在")
+            return render_template("msg.html", message="伺服器不存在",href=False)
         
         server_memory = int(request.form["memory"])
         server_cpu = int(request.form["cpu"])
@@ -166,11 +163,11 @@ async def index_server_edit(server_identifier):
         ptero_user_id = ptero_user_id['id']
 
         if server_cpu <= 0 or now["cpu"]-old_servers["cpu"]+server_cpu > resource["cpu"]:
-            return render_template("msg.html", message="你沒有足夠的CPU")
+            return render_template("msg.html", message="你沒有足夠的CPU",href=False)
         if server_memory <= 0 or now["memory"]-old_servers["memory"]+server_memory > resource["memory"]:
-            return render_template("msg.html", message="你沒有足夠的記憶體")
+            return render_template("msg.html", message="你沒有足夠的記憶體",href=False)
         if server_disk <= 0 or now["disk"]-old_servers["disk"]+server_disk > resource["disk"]:
-            return render_template("msg.html", message="你沒有足夠的空間")
+            return render_template("msg.html", message="你沒有足夠的空間",href=False)
         
         await ptero.edit_server(
             server_identifier=server_identifier,
@@ -178,5 +175,5 @@ async def index_server_edit(server_identifier):
             server_cpu=server_cpu,
             server_disk=server_disk
         )
-        return render_template("msg.html", message="修改成功")
+        return render_template("msg.html", message="修改成功",href="/")
     return render_template("edit.html", user=current_user)

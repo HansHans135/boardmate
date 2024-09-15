@@ -1,38 +1,56 @@
 # app.py
 
-from flask import Flask,jsonify
+from flask import Flask,jsonify,redirect,request
 from utils.ptero_api import Ptero
 import os
 import asyncio
 import json
 
+try_fix=0
 app = Flask(__name__)
 SETTING=json.load(open('setting.json',encoding="utf-8"))
 app.config["SECRET_KEY"] = "mysecret"
 ptero=Ptero(SETTING["pterodactyl"]["key"],SETTING["pterodactyl"]["url"])
 
-print("> 正在啟動緩存")
-asyncio.run(ptero.get_servers(use_cache=False))
-print(f"  L 伺服器")
-asyncio.run(ptero.get_users(use_cache=False))
-print(f"  L 用戶")
-for i in SETTING["server"]["node"]:
-    asyncio.run(ptero.get_allocations(SETTING["server"]["node"][i],use_cache=False))
-    print(f"  L 節點 {i}")
-print("> 已啟動緩存")
+if SETTING["boardmate"]["recache"]:
+    print("> 正在啟動緩存")
+    asyncio.run(ptero.get_servers(use_cache=False))
+    print(f"  L 伺服器")
+    asyncio.run(ptero.get_users(use_cache=False))
+    print(f"  L 用戶")
+    for i in SETTING["server"]["node"]:
+        asyncio.run(ptero.get_allocations(SETTING["server"]["node"][i],use_cache=False))
+        print(f"  L 節點 {i}")
+    print("> 已啟動緩存")
+else:
+    print("> 已跳過緩存")
 
 
 @app.errorhandler(404)
 async def error_404(error):
-    return jsonify({}),404
+    return "頁面不存在",404
 
 @app.errorhandler(400)
 async def error_400(error):
-    return jsonify({}),400
+    return "資料錯誤",400
 
 @app.errorhandler(500)
 async def error_500(error):
-    return jsonify({}),500
+    try:
+        await ptero.get_servers()
+    except:
+        await ptero.get_servers(use_cache=False)
+    try:
+        await ptero.get_users()
+    except:
+        await ptero.get_users(use_cache=False)
+    try:
+        for i in SETTING["server"]["node"]:
+            await ptero.get_allocations(SETTING["server"]["node"][i], use_cache=False)
+    except:
+        for i in SETTING["server"]["node"]:
+            await ptero.get_allocations(SETTING["server"]["node"][i], use_cache=False)
+    return {"status":"fixed","message":f"伺服器發生錯誤，已嘗試修復，請刷重整頁面"},200
 
 print("> 正在註冊檔案")
 views_dir = os.path.join(os.path.dirname(__file__), 'views')
@@ -46,4 +64,4 @@ for filename in os.listdir(views_dir):
 print("> 已註冊檔案")
 
 if __name__ == "__main__":
-    app.run(host=SETTING["boardmate"]["host"],port=SETTING["boardmate"]["port"])
+    app.run(host=SETTING["boardmate"]["host"],port=SETTING["boardmate"]["port"],debug=SETTING["boardmate"]["debug"])

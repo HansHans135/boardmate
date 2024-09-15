@@ -163,10 +163,8 @@ class Ptero:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.patch(f'{self.base_url}api/application/users/{u_id}', data=json.dumps(data)) as response:
                 data = await response.json()
-                print(data)
                 data=data["attributes"]
                 data["password"]=password
-        print(data)
         return data
     
     async def create_server(self, ptero_user_id, server_name, server_egg, server_node, server_disk, server_cpu, server_memory):
@@ -202,6 +200,10 @@ class Ptero:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(f'{self.base_url}api/application/servers', data=json.dumps(data)) as response:
                 data = await response.json()
+        tmp_data = await self.ptero.get_servers()
+        tmp_data += data,
+        with open("data/server_tmp.cache", "w", encoding="utf-8") as f:
+            json.dump(tmp_data, f, indent=4)
         return data
 
     async def delete_server(self, server_identifier):

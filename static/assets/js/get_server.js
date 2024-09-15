@@ -2,6 +2,10 @@ const url = '/api/servers';
 fetch(url)
     .then(response => response.json())
     .then(jsonData => {
+        if (jsonData.status == 'error' || jsonData.status == 'fixed') {
+            alert(jsonData.message);
+            return;
+        }
         const memoryTag = document.getElementById('memory');
         const memorytextToUpdate = `${jsonData.now.memory}/${jsonData.resource.memory} MB`;
         memoryTag.textContent = memorytextToUpdate;

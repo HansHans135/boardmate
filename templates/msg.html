@@ -1,5 +1,13 @@
 <script>
+    let h = "{{href}}";
     alert('{{message}}');
-    history.go(-1)
+    if (h != "False") {
+        window.location.href = "{{href}}"
+    }
+    else {
+        history.go(-1)
+    };
 </script>
-<html style='background-color: black;'></html>
+<html style='background-color: black;'>
+
+</html>
