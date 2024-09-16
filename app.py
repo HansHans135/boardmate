@@ -36,21 +36,28 @@ async def error_400(error):
 
 @app.errorhandler(500)
 async def error_500(error):
+    cache_error=False
     try:
         await ptero.get_servers()
     except:
+        cache_error=True
         await ptero.get_servers(use_cache=False)
     try:
         await ptero.get_users()
     except:
+        cache_error=True
         await ptero.get_users(use_cache=False)
     try:
         for i in SETTING["server"]["node"]:
             await ptero.get_allocations(SETTING["server"]["node"][i], use_cache=False)
     except:
+        cache_error=True
         for i in SETTING["server"]["node"]:
             await ptero.get_allocations(SETTING["server"]["node"][i], use_cache=False)
-    return {"status":"fixed","message":f"伺服器發生錯誤，已嘗試修復，請刷重整頁面"},200
+    if cache_error:
+        return {"status":"fixed","message":f"伺服器發生錯誤，已嘗試修復，請刷重整頁面"},200
+    else:
+        return {"status":"fixed","message":f"伺服器發生錯誤，無法自行修復，請連絡管理員"},200
 
 print("> 正在註冊檔案")
 views_dir = os.path.join(os.path.dirname(__file__), 'views')

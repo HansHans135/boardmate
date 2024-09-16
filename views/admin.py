@@ -1,14 +1,12 @@
 import random
 import string
-from flask import Blueprint, jsonify, redirect, session, render_template
+from flask import Blueprint, jsonify, redirect, session, render_template,request
 from utils.dc import Dc
 from utils.ptero_api import Ptero
 import json
 import asyncio
 import hashlib
 from urllib.parse import urlencode
-import time
-from flask import request
 
 SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
 ADD_TMP={}
@@ -22,7 +20,9 @@ async def statistics_all():
     servers=await ptero.get_servers()
     with open("data/code.json", "r", encoding="utf-8") as f:
         codes = len(json.load(f))
-    return {"users":len(users),"servers":len(servers),"codes":codes}
+    with open("data/api.txt", "r", encoding="utf-8") as f:
+        apis = len(f.read().splitlines())-1
+    return {"users":len(users),"servers":len(servers),"codes":codes,"apis":apis}
 
 @home.route("/admin")
 async def admin_home():
@@ -30,6 +30,7 @@ async def admin_home():
     if not access_token:
         return render_template("login.html")
     current_user = await dc.get_discord_user(access_token)
+    if current_user.id not in SETTING["boardmate"]["admins"]:return redirect("/")
     user=await ptero.search_user(current_user.email)
     with open("data/user.json", "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -39,11 +40,13 @@ async def admin_home():
             if e["attributes"]["id"]==data[i]["id"]:
                 ptero_user=e["attributes"]
                 break
-        data[i]["email"]=ptero_user["email"]
+        #data[i]["email"]=ptero_user["email"]
+        data[i]["email"]="-@gmail.com"
+
         data[i]["name"]=ptero_user["username"]
         data[i]["resource"]["memory"]=data[i]["resource"]["memory"]/1024
         data[i]["resource"]["disk"]=data[i]["resource"]["disk"]/1024
-        email = data[i]["email"]
+        email = ptero_user["email"]
         size = 40
         email_encoded = email.lower().encode('utf-8')
         email_hash = hashlib.sha256(email_encoded).hexdigest()
@@ -52,3 +55,43 @@ async def admin_home():
         data[i]["avatar"]=gravatar_url
     statistics=await statistics_all()
     return render_template("admin/index.html", user=current_user,user_data=data,statistics=statistics)
+
+@home.route("/admin/code", methods=["POST", "GET"])
+async def admin_code():
+    access_token = session.get("access_token")
+    if not access_token:
+        return render_template("login.html")
+    current_user = await dc.get_discord_user(access_token)
+    if current_user.id not in SETTING["boardmate"]["admins"]:return redirect("/")
+    with open("data/code.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    for i in data:
+        data[i]["len"]=len(data[i]["user"])
+    statistics=await statistics_all()
+    if request.method == "POST":
+        name=request.form["name"]
+        times=request.form["times"]
+        money=request.form["money"]
+        data[name]={
+            "user":[],
+            "use":int(times),
+            "money":int(money)
+        }
+        with open("data/code.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        return render_template("msg.html", message=f"新增 {name} 成功 (可用 {times} 次/可取得 {money} $)", href="/admin/code")
+    return render_template("admin/code.html", user=current_user,codes=data,statistics=statistics)
+
+@home.route("/admin/code/del/<code>")
+async def admin_code_del(code):
+    access_token = session.get("access_token")
+    if not access_token:
+        return render_template("login.html")
+    current_user = await dc.get_discord_user(access_token)
+    if current_user.id not in SETTING["boardmate"]["admins"]:return redirect("/")
+    with open("data/code.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data.pop(code)
+    with open("data/code.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    return render_template("msg.html", message=f"刪除 {code} 成功", href="/admin/code")

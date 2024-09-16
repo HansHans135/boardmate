@@ -10,3 +10,4 @@ data/user_tmp.cache
 data/server_tmp.cache
 data/testuser.json
 .DS_Store
+data/user.json
