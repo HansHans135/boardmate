@@ -40,9 +40,7 @@ async def admin_home():
             if e["attributes"]["id"]==data[i]["id"]:
                 ptero_user=e["attributes"]
                 break
-        #data[i]["email"]=ptero_user["email"]
-        data[i]["email"]="-@gmail.com"
-
+        data[i]["email"]=ptero_user["email"]
         data[i]["name"]=ptero_user["username"]
         data[i]["resource"]["memory"]=data[i]["resource"]["memory"]/1024
         data[i]["resource"]["disk"]=data[i]["resource"]["disk"]/1024
@@ -95,3 +93,24 @@ async def admin_code_del(code):
     with open("data/code.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     return render_template("msg.html", message=f"刪除 {code} 成功", href="/admin/code")
+
+@home.route("/admin/setting", methods=["POST", "GET"])
+async def admin_setting():
+    access_token = session.get("access_token")
+    if not access_token:
+        return render_template("login.html")
+    current_user = await dc.get_discord_user(access_token)
+    if current_user.id not in SETTING["boardmate"]["admins"]:return redirect("/")
+    statistics=await statistics_all()
+    if request.method == "POST":
+        SETTING['server']['default_resource']['memory']=int(request.form.get("memory"))
+        SETTING['server']['default_resource']['cpu']=int(request.form.get("cpu"))
+        SETTING['server']['default_resource']['disk']=int(request.form.get("disk"))
+        SETTING['boardmate']['admins']=[]
+        for i in request.form.get("admins").split("\n"):
+            if i.replace("\r","")!="":
+                SETTING['boardmate']['admins'].append(i.replace("\r",""))
+        with open("setting.json", "w", encoding="utf-8") as f:
+            json.dump(SETTING, f, ensure_ascii=False, indent=4)
+        return render_template("msg.html", message="設定成功，請重啟套用", href="/admin/setting")
+    return render_template("admin/setting.html", user=current_user,setting=SETTING,statistics=statistics)
