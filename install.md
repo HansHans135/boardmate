@@ -28,7 +28,10 @@ flask
     },
     "boardmate": {
         "host": "0.0.0.0", //boardmate運行位置
-        "port": 3000//boardmate運行端口
+        "port": 3000,//boardmate運行端口
+        "debug":false,
+        "recache":true,
+        "admins":["851062442330816522"] //管理員Discord User ID
     },
     "server": {
         "node": {

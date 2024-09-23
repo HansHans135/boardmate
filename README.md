@@ -5,17 +5,18 @@
 
 # 優點
 
-> 中文介面<br>
-> 無痛安裝<br>
-> 簡易配置<br>
-> 自動化流程<br>
-> discord登入<br>
-> 提供[api](https://github.com/HansHans135/boardmate/blob/main/api.md)
+- 中文介面<br>
+- 無痛安裝<br>
+- 簡易配置<br>
+- 自動化流程<br>
+- Discord登入<br>
+- 管理員後台<br>
+- 提供[Admin API](https://github.com/HansHans135/boardmate/blob/main/api.md)
 
 <br>
 
 # 截圖
-demo: https://shop.mycard.lol/<br>
+Demo: https://shop-fmdb.maybeisfree.host/<br>
 ![圖一](https://github.com/HansHans135/boardmate/blob/main/img/1.jpeg)
 ![圖二](https://github.com/HansHans135/boardmate/blob/main/img/2.jpeg)
 ![圖三](https://github.com/HansHans135/boardmate/blob/main/img/3.jpeg)
@@ -27,8 +28,7 @@ demo: https://shop.mycard.lol/<br>
 
 | 託管 | 連結 |
 | ---- | ---- |
-| FMDB免費機器人託管 | https://discord.gg/xqJ8hub4Qc |
-| NewLand託管編程 | https://discord.gg/S5JAwrzY2K |
+|【MIF】可能是免費? | https://maybeisfree.host |
 
 <br>
 
