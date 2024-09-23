@@ -1,0 +1,10 @@
+<script>
+    if (window.confirm("確定要刪除這個伺服器嗎？")) {
+        window.location.assign("/server/del/{{identifier}}?check={{token}}")
+    } else {
+        window.location.assign("/")
+    }
+</script>
+<html style='background-color: black;'>
+
+</html>
