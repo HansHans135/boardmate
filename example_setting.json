@@ -3,7 +3,8 @@
         "bot_token": "",
         "client_secret": "",
         "url": "",
-        "id": ""
+        "id": "",
+        "webhook":""
     },
     "pterodactyl": {
         "url": "",

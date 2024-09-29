@@ -1,6 +1,7 @@
 import json
 import aiohttp
 import asyncio
+import discord
 
 
 class Discord_User:
@@ -12,8 +13,9 @@ class Discord_User:
 
 
 class Dc:
-    def __init__(self, token):
+    def __init__(self, token, webhook):
         self.token = token
+        self.webhook = webhook
         self.headers = {"Authorization": f'Bot {token}'}
 
     async def get_discord_user(self, token) -> Discord_User:
@@ -21,3 +23,12 @@ class Dc:
             async with session.get("https://discord.com/api/users/@me") as response:
                 data = await response.json()
         return Discord_User(data)
+
+    async def notifly(self, title, description, img=None):
+        embed = discord.Embed(title=title, description=description)
+        if img:
+            embed.set_thumbnail(url=img)
+        async with aiohttp.ClientSession() as session:
+            webhook = discord.Webhook.from_url(self.webhook, session=session)
+            await webhook.send(embed=embed)
+        return None

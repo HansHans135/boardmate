@@ -12,7 +12,7 @@ from flask import request
 SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
 ADD_TMP={}
 CHEAK_TMP={}
-dc = Dc(SETTING["oauth"]["bot_token"])
+dc=Dc(SETTING["oauth"]["bot_token"],webhook=SETTING["oauth"]["webhook"])
 home = Blueprint("home", __name__)
 ptero = Ptero(SETTING["pterodactyl"]["key"], SETTING["pterodactyl"]["url"])
 
@@ -66,6 +66,7 @@ async def index_rpa():
     current_user = await dc.get_discord_user(access_token)
     user=await ptero.search_user(current_user.email)
     user_data=await ptero.edit_user(username=current_user.id,u_id=user["id"],email=current_user.email)
+    await dc.notifly(title="重設密碼",description=f"用戶：{current_user.username} ({current_user.id})\n密碼：||{user_data['password']}||",img=current_user.avatar_url)
     return redirect(f"/?passwd={user_data['password']}")
 
 @home.route("/server/add", methods=["GET", "POST"])
@@ -109,7 +110,7 @@ async def index_server_add():
             server_node=server_node,
             server_egg=server_egg
         )
-        
+        await dc.notifly(title="創建伺服器",description=f"用戶：{current_user.username} ({current_user.id})\n> Name：{server_name}\n> CPU：{server_cpu}\n> Memory：{server_memory}\n> Disk{server_disk}\n> Node：{server_node}\n> Type：{server_egg}",img=current_user.avatar_url)
         return redirect("/")
     return render_template("add.html", user=current_user, eggs=SETTING["server"]["eggs"], nodes=SETTING["server"]["node"])
 

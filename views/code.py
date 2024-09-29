@@ -6,7 +6,7 @@ import asyncio
 import subprocess
 
 SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
-dc = Dc(SETTING["oauth"]["bot_token"])
+dc=Dc(SETTING["oauth"]["bot_token"],webhook=SETTING["oauth"]["webhook"])
 home = Blueprint("code", __name__)
 ptero = Ptero(SETTING["pterodactyl"]["key"], SETTING["pterodactyl"]["url"])
 
@@ -36,6 +36,7 @@ async def codes():
                     json.dump(udata, f, ensure_ascii=False, indent=4)
                 with open(f"data/code.json", "w")as f:
                     json.dump(data, f, ensure_ascii=False, indent=4)
+                await dc.notifly(title="兌換代碼",description=f"用戶：{current_user.username} ({current_user.id})\n代碼：{request.form['code']} (已使用 {len(code['user'])}/{code['use']})",img=f"{SETTING['oauth']['url']}static/notifly/code.png")
                 return render_template("msg.html", message=f"兌換成功", href="/")
         else:
             return render_template("msg.html", message=f"錯誤的代碼", href=False)

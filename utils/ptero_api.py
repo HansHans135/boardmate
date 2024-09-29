@@ -85,8 +85,11 @@ class Ptero:
     async def search_user(self, email):
         data = await self.get_users()
         for i in data:
-            if i["attributes"]["email"] == email:
-                return i["attributes"]
+            try:
+                if i["attributes"]["email"] == email:
+                    return i["attributes"]
+            except:
+                pass
         return None
 
     async def search_server(self, u_id):

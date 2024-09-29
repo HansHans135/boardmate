@@ -6,7 +6,7 @@ import asyncio
 import subprocess
 
 SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
-dc = Dc(SETTING["oauth"]["bot_token"])
+dc=Dc(SETTING["oauth"]["bot_token"],webhook=SETTING["oauth"]["webhook"])
 home = Blueprint("shop", __name__)
 ptero = Ptero(SETTING["pterodactyl"]["key"], SETTING["pterodactyl"]["url"])
 
@@ -35,11 +35,11 @@ async def shopmode(mode):
     if mode == "servers":
         nmode = "server"
     if SETTING["shop"][nmode][request.form[mode]] <= data[str(current_user.id)]["money"]:
-        data[str(current_user.id)
-             ]["money"] -= SETTING["shop"][nmode][request.form[mode]]
+        data[str(current_user.id)]["money"] -= SETTING["shop"][nmode][request.form[mode]]
         data[str(current_user.id)]["resource"][mode] += int(request.form[mode])
         with open(f"data/user.json", "w")as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+        await dc.notifly(title="商店購買",description=f"用戶：{current_user.username} ({current_user.id})\n品項：{nmode} - {request.form[mode]}",img=current_user.avatar_url)
         return render_template("msg.html", message="購買成功！", href="/shop")
     else:
         return render_template("msg.html", message="你沒有足夠的錢錢", href=False)

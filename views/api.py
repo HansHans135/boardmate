@@ -6,7 +6,7 @@ import asyncio
 import subprocess
 
 SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
-dc = Dc(SETTING["oauth"]["bot_token"])
+dc=Dc(SETTING["oauth"]["bot_token"],webhook=SETTING["oauth"]["webhook"])
 home = Blueprint("api", __name__)
 ptero = Ptero(SETTING["pterodactyl"]["key"], SETTING["pterodactyl"]["url"])
 
