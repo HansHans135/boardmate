@@ -121,7 +121,9 @@ class Ptero:
 
     async def search_all_data(self, email, u_id):
         with open("data/user.json", "r", encoding="utf-8") as f:
-            resource = json.load(f)[str(u_id)]["resource"]
+            data=json.load(f)
+        resource = data[str(u_id)]["resource"]
+        money = data[str(u_id)]["money"]
         user_data = await self.search_user(email)
         server = await self.search_server(user_data["id"])
         resource["memory"]+=SETTING["server"]["default_resource"]["memory"]
@@ -129,7 +131,8 @@ class Ptero:
         resource["disk"]+=SETTING["server"]["default_resource"]["disk"]
         resource["servers"]+=SETTING["server"]["default_resource"]["servers"]
         now, server = server
-        return {"now": server, "resource": resource, "server": now}
+        
+        return {"money":money,"now": server, "resource": resource, "server": now}
     
     async def create_user(self,email,username):
         password=secrets.token_urlsafe()

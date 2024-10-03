@@ -32,18 +32,22 @@ async def error_404(error):
 
 @app.errorhandler(400)
 async def error_400(error):
-    return "資料錯誤",400
+    return jsonify({"code":400,"message":"資料有誤"}),400
 
 @app.errorhandler(500)
 async def error_500(error):
     cache_error=False
     try:
-        await ptero.get_servers()
+        try_server=await ptero.get_servers()
+        for i in try_server:
+            i["attributes"]
     except:
         cache_error=True
         await ptero.get_servers(use_cache=False)
     try:
-        await ptero.get_users()
+        try_user=await ptero.get_users()
+        for i in try_user:
+            i["attributes"]
     except:
         cache_error=True
         await ptero.get_users(use_cache=False)
@@ -55,9 +59,9 @@ async def error_500(error):
         for i in SETTING["server"]["node"]:
             await ptero.get_allocations(SETTING["server"]["node"][i], use_cache=False)
     if cache_error:
-        return {"status":"fixed","message":f"伺服器發生錯誤，已嘗試修復，請刷重整頁面"},200
+        return {"status":"fixed","message":f"伺服器發生錯誤，已嘗試修復，請重整頁面"},200
     else:
-        return {"status":"fixed","message":f"伺服器發生錯誤，無法自行修復，請連絡管理員"},200
+        return {"status":"error","message":f"伺服器發生錯誤，請連絡管理員"},200
 
 print("> 正在註冊檔案")
 views_dir = os.path.join(os.path.dirname(__file__), 'views')

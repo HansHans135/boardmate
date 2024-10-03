@@ -1,3 +1,4 @@
+from datetime import datetime
 import random
 import string
 from flask import Blueprint, jsonify, redirect, session, render_template,request
@@ -20,8 +21,8 @@ async def statistics_all():
     servers=await ptero.get_servers()
     with open("data/code.json", "r", encoding="utf-8") as f:
         codes = len(json.load(f))
-    with open("data/api.txt", "r", encoding="utf-8") as f:
-        apis = len(f.read().splitlines())-1
+    with open("data/api.json", "r", encoding="utf-8") as f:
+        apis = len(json.load(f)['log'])
     return {"users":len(users),"servers":len(servers),"codes":codes,"apis":apis}
 
 @home.route("/admin")
@@ -95,6 +96,20 @@ async def admin_code_del(code):
         json.dump(data, f, ensure_ascii=False, indent=4)
     await dc.notifly(title="刪除代碼",description=f"用戶：{current_user.username} ({current_user.id})\n代碼：{code}",img=current_user.avatar_url)
     return render_template("msg.html", message=f"刪除 {code} 成功", href="/admin/code")
+
+@home.route("/admin/log")
+async def admin_log():
+    access_token = session.get("access_token")
+    if not access_token:
+        return render_template("login.html")
+    current_user = await dc.get_discord_user(access_token)
+    if current_user.id not in SETTING["boardmate"]["admins"]:return redirect("/")
+    statistics=await statistics_all()
+    with open("data/api.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    for i in data["log"]:
+        i["time"]=datetime.utcfromtimestamp(i["time"])
+    return render_template("admin/log.html", user=current_user,logs=data['log'],statistics=statistics)
 
 @home.route("/admin/setting", methods=["POST", "GET"])
 async def admin_setting():
