@@ -6,7 +6,7 @@ import discord
 
 home = Blueprint('oauth', __name__)
 SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
-dc=Dc(SETTING["oauth"]["bot_token"])
+dc=Dc(SETTING["oauth"]["bot_token"],webhook=SETTING["oauth"]["webhook"])
 
 @home.route("/oauth/callback")
 async def oauth_callback():
@@ -20,11 +20,11 @@ async def oauth_callback():
     async with aiohttp.ClientSession() as session:
         async with session.post("https://discord.com/api/oauth2/token", data=payload) as response:
             token_data = await response.json()
-    print(token_data)
     access_token = token_data.get('access_token')
-    print(access_token)
     flask_session["access_token"] = access_token
-    return redirect("/log")
+    current_user = await dc.get_discord_user(access_token)
+    await dc.notifly(title="登入通知",description=f"用戶：{current_user.username}\nID：{current_user.id}\nEmail：{current_user.email}",img=current_user.avatar_url)
+    return redirect("/")
 
 
 @home.route("/login")
@@ -36,15 +36,12 @@ async def login():
 
 @home.route("/logout")
 async def logout():
-    flask_session.pop("access_token")
-    return redirect("/")
-
-
-@home.route("/log")
-async def log():
     access_token = flask_session.get("access_token")
     if not access_token:
         return redirect("/")
     current_user = await dc.get_discord_user(access_token)
-    embed=discord.Embed(title="登入成功",description=f"{current_user.username}")
+    await dc.notifly(title="登出通知",description=f"用戶：{current_user.username}\nID：{current_user.id}\nEmail：{current_user.email}",img=current_user.avatar_url)
+    flask_session.pop("access_token")
     return redirect("/")
+
+

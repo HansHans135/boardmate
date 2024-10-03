@@ -20,7 +20,8 @@ flask
         "bot_token": "", //discord app機器人token
         "client_secret": "", //discord app用戶端secret
         "url": "http://your.url/", //此面板網址(用於oauth登入導向 請將CUSTOM URL設為 http://your.url/oauth/callback/)
-        "id": "" //discord app id
+        "id": "", //discord app id
+        "webhook":"" //通知位置
     },
     "pterodactyl": {
         "url": "http://yourpterodactyl.url/",  //pterodactyl面板網址
