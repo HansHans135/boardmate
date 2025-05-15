@@ -103,7 +103,6 @@ class Database:
                         
                 conn.commit()
                 conn.close()
-                print("已將用戶數據從JSON遷移到SQLite")
             except Exception as e:
                 print(f"遷移用戶數據時發生錯誤: {e}")
         
@@ -127,7 +126,6 @@ class Database:
                 
                 conn.commit()
                 conn.close()
-                print("已將API數據從JSON遷移到SQLite")
             except Exception as e:
                 print(f"遷移API數據時發生錯誤: {e}")
         
@@ -158,7 +156,6 @@ class Database:
                 
                 conn.commit()
                 conn.close()
-                print("已將代碼數據從JSON遷移到SQLite")
             except Exception as e:
                 print(f"遷移代碼數據時發生錯誤: {e}")
     
