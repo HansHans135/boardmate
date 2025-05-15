@@ -2,9 +2,16 @@ import secrets
 import subprocess
 import aiohttp
 import json
+import os
 
-SETTING = json.load(open('setting.json', encoding="utf-8"))
+_SETTINGS = None
 
+def get_settings():
+    """獲取設定檔案"""
+    global _SETTINGS
+    if _SETTINGS is None:
+        _SETTINGS = json.load(open('setting.json', encoding="utf-8"))
+    return _SETTINGS
 
 class Ptero:
     def __init__(self, api_key, base_url):
@@ -33,6 +40,7 @@ class Ptero:
                         try:
                             url = data["meta"]["pagination"]["links"]["next"]
                         except:
+                            os.makedirs("data", exist_ok=True)
                             with open("data/user_tmp.cache", "w", encoding="utf-8") as f:
                                 json.dump(user_list, f,
                                           ensure_ascii=False, indent=4)
@@ -55,6 +63,7 @@ class Ptero:
                         try:
                             url = data["meta"]["pagination"]["links"]["next"]
                         except:
+                            os.makedirs("data", exist_ok=True)
                             with open("data/server_tmp.cache", "w", encoding="utf-8") as f:
                                 json.dump(server_list, f,
                                           ensure_ascii=False, indent=4)
@@ -77,6 +86,7 @@ class Ptero:
                         try:
                             url = data["meta"]["pagination"]["links"]["next"]
                         except:
+                            os.makedirs("data", exist_ok=True)
                             with open(f"data/node_{node_id}_allocation_tmp.cache", "w", encoding="utf-8") as f:
                                 json.dump(allocation_list, f,
                                           ensure_ascii=False, indent=4)
@@ -115,24 +125,28 @@ class Ptero:
                 servers[identifier]["id"] = identifier
                 servers[identifier]["description"] = attributes["description"]
                 servers[identifier]["name"] = attributes["name"]
-                servers[identifier]["url"] = f'{SETTING["pterodactyl"]["url"]}server/{identifier}'
+                servers[identifier]["url"] = f'{get_settings()["pterodactyl"]["url"]}server/{identifier}'
 
         return servers, now
 
     async def search_all_data(self, email, u_id):
-        with open("data/user.json", "r", encoding="utf-8") as f:
-            data=json.load(f)
-        resource = data[str(u_id)]["resource"]
-        money = data[str(u_id)]["money"]
-        user_data = await self.search_user(email)
-        server = await self.search_server(user_data["id"])
-        resource["memory"]+=SETTING["server"]["default_resource"]["memory"]
-        resource["cpu"]+=SETTING["server"]["default_resource"]["cpu"]
-        resource["disk"]+=SETTING["server"]["default_resource"]["disk"]
-        resource["servers"]+=SETTING["server"]["default_resource"]["servers"]
-        now, server = server
+        from utils.db import get_db
+        db = get_db()
         
-        return {"money":money,"now": server, "resource": resource, "server": now}
+        # 確保用戶存在
+        db.ensure_user_exists(u_id)
+        
+        user_data = await self.search_user(email)
+        if user_data:
+            db.update_user(u_id, ptero_id=user_data["id"])
+            
+        user_db_data = db.get_user(u_id)
+        resource = user_db_data["resource"]
+        money = user_db_data["money"]
+        
+        server_data, now = await self.search_server(user_data["id"])
+        
+        return {"money": money, "now": now, "resource": resource, "server": server_data}
     
     async def create_user(self,email,username):
         password=secrets.token_urlsafe()
@@ -180,13 +194,14 @@ class Ptero:
                 allocation = i["attributes"]["id"]
                 break
         await self.get_allocations(server_node, use_cache=False)
+        settings = get_settings()
         data = {
             "name": server_name,
             "user": ptero_user_id,
-            "egg": SETTING["server"]["eggs"][server_egg]["egg_id"],
-            "docker_image": SETTING["server"]["eggs"][server_egg]["docker_image"],
-            "startup": SETTING["server"]["eggs"][server_egg]["startup"],
-            "environment": SETTING["server"]["eggs"][server_egg]["environment"],
+            "egg": settings["server"]["eggs"][server_egg]["egg_id"],
+            "docker_image": settings["server"]["eggs"][server_egg]["docker_image"],
+            "startup": settings["server"]["eggs"][server_egg]["startup"],
+            "environment": settings["server"]["eggs"][server_egg]["environment"],
             "limits": {
                 "memory": server_memory,
                 "swap": 0,
@@ -195,8 +210,8 @@ class Ptero:
                 "cpu": server_cpu
             },
             "feature_limits": {
-                "databases": SETTING["server"]["feature_limits"]["databases"],
-                "backups": SETTING["server"]["feature_limits"]["backups"]
+                "databases": settings["server"]["feature_limits"]["databases"],
+                "backups": settings["server"]["feature_limits"]["backups"]
             },
             "allocation": {
                 "default": allocation

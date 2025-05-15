@@ -1,12 +1,15 @@
 from flask import Blueprint, jsonify, request, url_for, redirect,make_response, session as flask_session
 from utils.dc import Dc
+from utils.ptero_api import get_settings
+from utils.db import get_db
 import aiohttp
 import json
 import discord
 
 home = Blueprint('oauth', __name__)
-SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
-dc=Dc(SETTING["oauth"]["bot_token"],webhook=SETTING["oauth"]["webhook"])
+SETTING = get_settings()
+dc = Dc(SETTING["oauth"]["bot_token"], webhook=SETTING["oauth"]["webhook"])
+db = get_db()
 
 @home.route("/oauth/callback")
 async def oauth_callback():
@@ -23,9 +26,12 @@ async def oauth_callback():
     access_token = token_data.get('access_token')
     current_user = await dc.get_discord_user(access_token)
 
-    if SETTING["boardmate"]["account_sharing"]==False:
+    # 確保用戶存在於資料庫
+    db.ensure_user_exists(current_user.id)
+
+    if SETTING["boardmate"]["account_sharing"] == False:
         if str(request.cookies.get("user_id")) != "None":
-            if str(request.cookies.get("user_id")) != str(current_user.id) :
+            if str(request.cookies.get("user_id")) != str(current_user.id):
                 await dc.notifly(title="分帳登入通知",description=f"用戶：{current_user.username}\nID：{current_user.id}\nEmail：{current_user.email}\n\n上次使用的帳號：<@{request.cookies.get('user_id')}>",img=current_user.avatar_url)
                 return jsonify({"status":"error","message":f"不允許的操作"}),403
         

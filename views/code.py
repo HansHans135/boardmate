@@ -1,15 +1,16 @@
 from flask import Blueprint, jsonify, redirect, session, render_template, request
 from utils.dc import Dc
-from utils.ptero_api import Ptero
+from utils.ptero_api import Ptero, get_settings
+from utils.db import get_db
 import json
 import asyncio
 import subprocess
 
-SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
-dc=Dc(SETTING["oauth"]["bot_token"],webhook=SETTING["oauth"]["webhook"])
+SETTING = get_settings()
+dc = Dc(SETTING["oauth"]["bot_token"], webhook=SETTING["oauth"]["webhook"])
 home = Blueprint("code", __name__)
 ptero = Ptero(SETTING["pterodactyl"]["key"], SETTING["pterodactyl"]["url"])
-
+db = get_db()
 
 @home.route("/code", methods=["POST", "GET"])
 async def codes():
@@ -17,27 +18,25 @@ async def codes():
     if not access_token:
         return redirect(f"/")
     current_user = await dc.get_discord_user(access_token)
+    
     if request.method == "POST":
-        with open(f"data/code.json", "r")as f:
-            data = json.load(f)
-        if request.form["code"] in data:
-            code = data[request.form["code"]]
-            if len(code["user"]) == code["use"]:
-                return render_template("msg.html", message=f"代碼已被使用完畢", href="/code")
-            else:
-                if current_user.id in code["user"]:
-                    return render_template("msg.html", message=f"你已經兌換過", href="/code")
-                with open(f"data/user.json", "r")as f:
-                    udata = json.load(f)
-                code["user"].append(current_user.id)
-                data[request.form["code"]] = code
-                udata[str(current_user.id)]["money"] += code["money"]
-                with open(f"data/user.json", "w")as f:
-                    json.dump(udata, f, ensure_ascii=False, indent=4)
-                with open(f"data/code.json", "w")as f:
-                    json.dump(data, f, ensure_ascii=False, indent=4)
-                await dc.notifly(title="兌換代碼",description=f"用戶：{current_user.username} ({current_user.id})\n代碼：{request.form['code']} (已使用 {len(code['user'])}/{code['use']})",img=f"{SETTING['oauth']['url']}static/notifly/code.png")
-                return render_template("msg.html", message=f"兌換成功", href="/")
-        else:
-            return render_template("msg.html", message=f"錯誤的代碼", href=False)
+        code = request.form["code"]
+        success, result = db.use_code(code, current_user.id)
+        
+        if not success:
+            return render_template("msg.html", message=result, href="/code")
+            
+        # 成功兌換代碼
+        codes = db.get_codes()
+        code_info = codes.get(code, {})
+        code_usage = len(code_info.get("user", []))
+        code_limit = code_info.get("use", 0)
+        
+        await dc.notifly(
+            title="兌換代碼",
+            description=f"用戶：{current_user.username} ({current_user.id})\n代碼：{code} (已使用 {code_usage}/{code_limit})",
+            img=f"{SETTING['oauth']['url']}static/notifly/code.png"
+        )
+        return render_template("msg.html", message=f"兌換成功", href="/")
+        
     return render_template("code.html", user=current_user)

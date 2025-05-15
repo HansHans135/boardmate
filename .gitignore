@@ -12,3 +12,6 @@ data/testuser.json
 .DS_Store
 data/user.json
 ban.py
+utils/__pycache__/*
+views/__pycache__/*
+data/boardmate.db

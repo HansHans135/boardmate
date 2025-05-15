@@ -1,16 +1,20 @@
 # app.py
 
 from flask import Flask,jsonify,redirect,request
-from utils.ptero_api import Ptero
+from utils.ptero_api import Ptero, get_settings
+from utils.db import get_db
 import os
 import asyncio
 import json
 
 try_fix=0
 app = Flask(__name__)
-SETTING=json.load(open('setting.json',encoding="utf-8"))
+SETTING = get_settings()
 app.config["SECRET_KEY"] = "mysecret"
 ptero=Ptero(SETTING["pterodactyl"]["key"],SETTING["pterodactyl"]["url"])
+
+# 初始化資料庫
+db = get_db()
 
 if SETTING["boardmate"]["recache"]:
     print("> 正在啟動緩存")

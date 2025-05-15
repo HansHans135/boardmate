@@ -1,15 +1,16 @@
 from flask import Blueprint, jsonify, redirect, session, render_template, request
 from utils.dc import Dc
-from utils.ptero_api import Ptero
+from utils.ptero_api import Ptero, get_settings
+from utils.db import get_db
 import json
 import asyncio
 import subprocess
 
-SETTING = json.load(open("setting.json", "r", encoding="utf-8"))
-dc=Dc(SETTING["oauth"]["bot_token"],webhook=SETTING["oauth"]["webhook"])
+SETTING = get_settings()
+dc = Dc(SETTING["oauth"]["bot_token"], webhook=SETTING["oauth"]["webhook"])
 home = Blueprint("shop", __name__)
 ptero = Ptero(SETTING["pterodactyl"]["key"], SETTING["pterodactyl"]["url"])
-
+db = get_db()
 
 @home.route("/shop")
 async def shop():
@@ -17,9 +18,10 @@ async def shop():
     if not access_token:
         return redirect("/")
     current_user = await dc.get_discord_user(access_token)
-    with open(f"data/user.json", "r")as f:
-        data = json.load(f)
-    money = data[str(current_user.id)]["money"]
+    
+    user_data = db.get_user(current_user.id)
+    money = user_data["money"] if user_data else 0
+    
     return render_template("shop.html", money=money, user=current_user, shop=SETTING["shop"])
 
 
@@ -29,17 +31,30 @@ async def shopmode(mode):
     if not access_token:
         return redirect(f"/")
     current_user = await dc.get_discord_user(access_token)
-    with open(f"data/user.json", "r")as f:
-        data = json.load(f)
+    
+    user_data = db.get_user(current_user.id)
+    if not user_data:
+        return render_template("msg.html", message="找不到用戶資料", href=False)
+    
     nmode = mode
     if mode == "servers":
         nmode = "server"
-    if SETTING["shop"][nmode][request.form[mode]] <= data[str(current_user.id)]["money"]:
-        data[str(current_user.id)]["money"] -= SETTING["shop"][nmode][request.form[mode]]
-        data[str(current_user.id)]["resource"][mode] += int(request.form[mode])
-        with open(f"data/user.json", "w")as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-        await dc.notifly(title="商店購買",description=f"用戶：{current_user.username} ({current_user.id})\n品項：{nmode} - {request.form[mode]}",img=current_user.avatar_url)
+    
+    value = int(request.form[mode])
+    item_cost = SETTING["shop"][nmode][request.form[mode]]
+    
+    if item_cost <= user_data["money"]:
+        # 更新資料
+        updates = {"money": user_data["money"] - item_cost}
+        updates[mode] = user_data["resource"][mode] + value
+        
+        db.update_user(current_user.id, **updates)
+        
+        await dc.notifly(
+            title="商店購買",
+            description=f"用戶：{current_user.username} ({current_user.id})\n品項：{nmode} - {request.form[mode]}",
+            img=current_user.avatar_url
+        )
         return render_template("msg.html", message="購買成功！", href="/shop")
     else:
         return render_template("msg.html", message="你沒有足夠的錢錢", href=False)
