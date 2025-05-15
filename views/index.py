@@ -135,8 +135,20 @@ async def index_server_edit(server_identifier):
     if not access_token:
         return redirect("/login")
     current_user = await dc.get_discord_user(access_token)
+    
+    servers = await ptero.search_all_data(email=current_user.email, u_id=current_user.id)
+    server_info = None
+    
+    # 檢查伺服器是否存在
+    for i in servers["server"]:
+        if i == server_identifier:
+            server_info = servers["server"][i]
+            break
+            
+    if not server_info:
+        return render_template("msg.html", message="伺服器不存在", href="/")
+    
     if request.method == "POST":
-        servers = await ptero.search_all_data(email=current_user.email, u_id=current_user.id)
         now = servers["now"]
         resource = servers["resource"]
         old_servers = None
@@ -167,4 +179,5 @@ async def index_server_edit(server_identifier):
             server_disk=server_disk
         )
         return render_template("msg.html", message="修改成功", href="/")
-    return render_template("edit.html", user=current_user)
+    
+    return render_template("edit.html", user=current_user, server=server_info, identifier=server_identifier)

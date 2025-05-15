@@ -411,17 +411,30 @@
                   <span class="text-gray-700 dark:text-gray-400">{{error}}</span>
                 </label>
                 {% endif %}
+                <!--
+                <label class="block text-sm">
+                  <span class="text-gray-700 dark:text-gray-400">伺服器識別碼</span>
+                  <input disabled type="text" value="{{ identifier }}"
+                    class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input" />
+                </label>
+                -->
+                
+                <label class="block text-sm"></label>
+                  <span class="text-gray-700 dark:text-gray-400">伺服器名稱</span>
+                  <input disabled type="text" value="{{ server.name }}"
+                    class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input" />
+                </label>
               
                 <label class="block text-sm">
                   <span class="text-gray-700 dark:text-gray-400">CPU</span>
-                  <input required type="number" name="cpu"
+                  <input required type="number" name="cpu" value="{{ server.cpu }}"
                     class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
                     placeholder="50" />
                 </label>
 
                 <label class="block text-sm">
                   <span class="text-gray-700 dark:text-gray-400">記憶體</span>
-                  <input required type="number" name="memory"
+                  <input required type="number" name="memory" value="{{ server.memory }}"
                     class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
                     placeholder="512" />
                 </label>
@@ -429,7 +442,7 @@
 
                 <label class="block text-sm">
                   <span class="text-gray-700 dark:text-gray-400">空間</span>
-                  <input required type="number" name="disk"
+                  <input required type="number" name="disk" value="{{ server.disk }}"
                     class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
                     placeholder="512" />
                 </label>
