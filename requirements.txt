@@ -1,5 +1,4 @@
 py-cord
-flask[async]
 fastapi
 uvicorn
 python-multipart
