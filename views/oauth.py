@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Request, Query, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
-from utils.dc import Dc
-from utils.ptero_api import get_settings
-from utils.db import get_db
 import aiohttp
-import json
-import discord
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import JSONResponse, RedirectResponse
+
+from utils.dc import Dc
+from utils.db import get_db
+from utils.ptero_api import get_settings
 
 home = APIRouter(tags=['oauth'])
 SETTING = get_settings()

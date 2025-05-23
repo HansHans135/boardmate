@@ -1,13 +1,9 @@
-import random
-import string
-from fastapi import APIRouter, HTTPException, Request, Form, Query
+from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
+
 from utils.dc import Dc
-from utils.ptero_api import Ptero, get_settings
 from utils.db import get_db
-import json
-import os
-import time
+from utils.ptero_api import Ptero, get_settings
 
 SETTING = get_settings()
 dc = Dc(SETTING["oauth"]["bot_token"], webhook=SETTING["oauth"]["webhook"])

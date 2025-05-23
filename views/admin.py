@@ -1,16 +1,14 @@
 from datetime import datetime
-import random
-import string
-from fastapi import APIRouter, HTTPException, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+import hashlib
+from urllib.parse import urlencode
+
+from fastapi import APIRouter, Request, Form
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+
 from utils.dc import Dc
 from utils.ptero_api import Ptero, get_settings
 from utils.db import get_db
-import json
-import asyncio
-import hashlib
-from urllib.parse import urlencode
 
 SETTING = get_settings()
 ADD_TMP={}

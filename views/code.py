@@ -1,12 +1,10 @@
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+
 from utils.dc import Dc
-from utils.ptero_api import Ptero, get_settings
 from utils.db import get_db
-import json
-import asyncio
-import subprocess
+from utils.ptero_api import Ptero, get_settings
 
 SETTING = get_settings()
 dc = Dc(SETTING["oauth"]["bot_token"], webhook=SETTING["oauth"]["webhook"])

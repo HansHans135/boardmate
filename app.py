@@ -1,31 +1,26 @@
-# app.py
+import os
+import asyncio
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
+
 from utils.ptero_api import Ptero, get_settings
 from utils.db import get_db
-import os
-import asyncio
-import json
-import secrets
 
 try_fix=0
 app = FastAPI()
 SETTING = get_settings()
 
-# 添加會話中間件
 secret_key = (SETTING["oauth"]["client_secret"]*2)[5:25]
 app.add_middleware(SessionMiddleware, secret_key=secret_key)
 
-# 掛載靜態檔案（如果需要）
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 ptero=Ptero(SETTING["pterodactyl"]["key"],SETTING["pterodactyl"]["url"])
 
-# 初始化資料庫
 db = get_db()
 
 if SETTING["boardmate"]["recache"]:

@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Request, Form, Query
-from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
-from utils.dc import Dc
-from utils.ptero_api import Ptero, get_settings
-from utils.db import get_db
+import asyncio
 import random
 import string
-import asyncio
 import time
+
+from fastapi import APIRouter, Form, Query, Request
+from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
+
+from utils.dc import Dc
+from utils.db import get_db
+from utils.ptero_api import Ptero, get_settings
 
 SETTING = get_settings()
 ADD_TMP = {}
