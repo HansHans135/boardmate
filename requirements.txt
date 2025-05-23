@@ -1,2 +1,6 @@
 py-cord
 flask[async]
+fastapi
+uvicorn
+python-multipart
+jinja2

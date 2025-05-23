@@ -1,16 +1,28 @@
 # app.py
 
-from flask import Flask,jsonify,redirect,request
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from utils.ptero_api import Ptero, get_settings
 from utils.db import get_db
 import os
 import asyncio
 import json
+import secrets
 
 try_fix=0
-app = Flask(__name__)
+app = FastAPI()
 SETTING = get_settings()
-app.config["SECRET_KEY"] = "mysecret"
+
+# 添加會話中間件
+secret_key = (SETTING["oauth"]["client_secret"]*2)[5:25]
+app.add_middleware(SessionMiddleware, secret_key=secret_key)
+
+# 掛載靜態檔案（如果需要）
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
 ptero=Ptero(SETTING["pterodactyl"]["key"],SETTING["pterodactyl"]["url"])
 
 # 初始化資料庫
@@ -30,16 +42,16 @@ else:
     print("> 已跳過緩存")
 
 
-@app.errorhandler(404)
-async def error_404(error):
-    return "頁面不存在",404
+@app.exception_handler(404)
+async def error_404(request: Request, exc: HTTPException):
+    return HTMLResponse(content="頁面不存在", status_code=404)
 
-@app.errorhandler(400)
-async def error_400(error):
-    return jsonify({"code":400,"message":"資料有誤"}),400
+@app.exception_handler(400)
+async def error_400(request: Request, exc: HTTPException):
+    return JSONResponse(content={"code": 400, "message": "資料有誤"}, status_code=400)
 
-@app.errorhandler(500)
-async def error_500(error):
+@app.exception_handler(500)
+async def error_500(request: Request, exc: HTTPException):
     cache_error=False
     try:
         try_server=await ptero.get_servers()
@@ -63,9 +75,9 @@ async def error_500(error):
         for i in SETTING["server"]["node"]:
             await ptero.get_allocations(SETTING["server"]["node"][i], use_cache=False)
     if cache_error:
-        return {"status":"fixed","message":f"伺服器發生錯誤，已嘗試修復，請重整頁面"},200
+        return JSONResponse(content={"status":"fixed","message":f"伺服器發生錯誤，已嘗試修復，請重整頁面"}, status_code=200)
     else:
-        return {"status":"error","message":f"伺服器發生錯誤，請連絡管理員"},200
+        return JSONResponse(content={"status":"error","message":f"伺服器發生錯誤，請連絡管理員"}, status_code=200)
 
 print("> 正在註冊檔案")
 views_dir = os.path.join(os.path.dirname(__file__), 'views')
@@ -75,8 +87,10 @@ for filename in os.listdir(views_dir):
         module = __import__(f'views.{module_name}', fromlist=['*'])
         print(f"  L {module_name}.py")
         if hasattr(module, 'home'):
-            app.register_blueprint(module.home)
+            # FastAPI 使用 include_router 而不是 register_blueprint
+            app.include_router(module.home)
 print("> 已註冊檔案")
 
 if __name__ == "__main__":
-    app.run(host=SETTING["boardmate"]["host"],port=SETTING["boardmate"]["port"],debug=SETTING["boardmate"]["debug"])
+    import uvicorn
+    uvicorn.run(app, host=SETTING["boardmate"]["host"], port=SETTING["boardmate"]["port"])
