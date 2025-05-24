@@ -14,6 +14,7 @@
   <script src="/static/assets/js/charts-lines.js" defer></script>
   <script src="/static/assets/js/charts-pie.js" defer></script>
   <script src="/static/assets/js/get_server.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -415,18 +416,19 @@
               <span class="text-gray-700 dark:text-gray-400">{{error}}</span>
             </label>
             {% endif %}
-            <form action="#" method="post">
+            <form id="codeForm" action="#" method="post">
               <label class="block text-sm">
                 <span class="text-gray-700 dark:text-gray-400">代碼</span>
                 <input required
                 name="code"
+                id="codeInput"
                   class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
                   />
               </label>
 
               <label class="block mt-4 text-sm">
                 <div>
-                  <button
+                  <button type="submit"
                     class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
                     兌換
                   </button>
@@ -438,6 +440,63 @@
       </main>
     </div>
   </div>
+
+  <script>
+    document.getElementById('codeForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const code = formData.get('code');
+      
+      if (!code) {
+        Swal.fire({
+          icon: 'warning',
+          title: '請輸入代碼',
+          text: '代碼欄位不能為空',
+          confirmButtonColor: '#7c3aed'
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch('/code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: new URLSearchParams(formData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: '兌換成功！',
+            text: result.message,
+            confirmButtonColor: '#7c3aed'
+          }).then(() => {
+            document.getElementById('codeInput').value = '';
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: '兌換失敗',
+            text: result.message,
+            confirmButtonColor: '#7c3aed'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: '發生錯誤',
+          text: '請稍後再試',
+          confirmButtonColor: '#7c3aed'
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>

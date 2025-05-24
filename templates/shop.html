@@ -14,6 +14,7 @@
   <script src="/static/assets/js/charts-lines.js" defer></script>
   <script src="/static/assets/js/charts-pie.js" defer></script>
   <script src="/static/assets/js/get_server.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -118,7 +119,7 @@
         <ul>
           <li class="relative px-6 py-3">
             <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
-              href="/shop/serevr/add">
+              href="/server/add">
               <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"
                 stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -418,7 +419,7 @@
                 你目前有{{money}}$
               </span>
             </label>
-            <form action="shop/cpu" method="post">
+            <form id="cpu-form" action="/shop/cpu" method="post">
               <label class="block mt-4 text-sm">
                 <span class="text-gray-700 dark:text-gray-400">
                   CPU
@@ -432,7 +433,7 @@
               </label>
               <label class="block mt-4 text-sm">
                 <div>
-                  <button
+                  <button type="submit"
                     class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
                     購買
                   </button>
@@ -440,7 +441,7 @@
               </label>
             </form>
 
-            <form action="shop/memory" method="post">
+            <form id="memory-form" action="/shop/memory" method="post">
               <label class="block mt-4 text-sm">
                 <span class="text-gray-700 dark:text-gray-400">
                   記憶體
@@ -454,7 +455,7 @@
               </label>
               <label class="block mt-4 text-sm">
                 <div>
-                  <button
+                  <button type="submit"
                     class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
                     購買
                   </button>
@@ -462,7 +463,7 @@
               </label>
             </form>
 
-            <form action="shop/disk" method="post">
+            <form id="disk-form" action="/shop/disk" method="post">
               <label class="block mt-4 text-sm">
                 <span class="text-gray-700 dark:text-gray-400">
                   空間
@@ -476,7 +477,7 @@
               </label>
               <label class="block mt-4 text-sm">
                 <div>
-                  <button
+                  <button type="submit"
                     class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
                     購買
                   </button>
@@ -484,7 +485,7 @@
               </label>
             </form>
 
-            <form action="shop/servers" method="post">
+            <form id="servers-form" action="/shop/servers" method="post">
               <label class="block mt-4 text-sm">
                 <span class="text-gray-700 dark:text-gray-400">
                   伺服器
@@ -498,7 +499,7 @@
               </label>
               <label class="block mt-4 text-sm">
                 <div>
-                  <button
+                  <button type="submit"
                     class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
                     購買
                   </button>
@@ -511,6 +512,102 @@
       </main>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const forms = ['cpu-form', 'memory-form', 'disk-form', 'servers-form'];
+      
+      forms.forEach(formId => {
+        const form = document.getElementById(formId);
+        if (form) {
+          form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            const selectElement = form.querySelector('select');
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const selectedText = selectedOption.text;
+            const resourceType = selectElement.name;
+            
+            const result = await Swal.fire({
+              title: '確認購買',
+              html: `
+                <div class="text-center">
+                  <p><strong>商品類型：</strong>${getResourceTypeName(resourceType)}</p>
+                  <p><strong>購買內容：</strong>${selectedText}</p>
+                  <p class="text-red-600 mt-2">確定要購買嗎？</p>
+                </div>
+              `,
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#7c3aed',
+              cancelButtonColor: '#6b7280',
+              confirmButtonText: '確定購買',
+              cancelButtonText: '取消',
+              reverseButtons: true
+            });
+            
+            if (!result.isConfirmed) {
+              return;
+            }
+            
+            submitButton.textContent = '處理中...';
+            submitButton.disabled = true;
+            
+            try {
+              const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData
+              });
+              
+              const responseData = await response.json();
+              
+              if (response.ok && responseData.success) {
+                await Swal.fire({
+                  icon: 'success',
+                  title: '購買成功！',
+                  text: responseData.message,
+                  confirmButtonColor: '#7c3aed'
+                });
+                
+                location.reload()
+              } else {
+                await Swal.fire({
+                  icon: 'error',
+                  title: '購買失敗',
+                  text: responseData.message || '發生未知錯誤',
+                  confirmButtonColor: '#7c3aed'
+                });
+              }
+            } catch (error) {
+              await Swal.fire({
+                icon: 'error',
+                title: '錯誤',
+                text: '網路連線發生問題，請稍後再試',
+                confirmButtonColor: '#7c3aed'
+              });
+            } finally {
+              submitButton.textContent = originalText;
+              submitButton.disabled = false;
+            }
+          });
+        }
+      });
+      
+      function getResourceTypeName(resourceType) {
+        const typeMap = {
+          'cpu': 'CPU',
+          'memory': '記憶體',
+          'disk': '磁碟空間',
+          'servers': '伺服器'
+        };
+        return typeMap[resourceType] || resourceType;
+      }
+    });
+  </script>
 </body>
 
 </html>

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from utils.dc import Dc
@@ -29,6 +29,32 @@ async def codes_post(request: Request, code: str = Form(...)):
         return RedirectResponse(url="/", status_code=302)
     current_user = await dc.get_discord_user(access_token)
     
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        success, result = db.use_code(code, current_user.id)
+        
+        if not success:
+            return JSONResponse({
+                "success": False,
+                "message": result
+            })
+            
+        codes = db.get_codes()
+        code_info = codes.get(code, {})
+        code_usage = len(code_info.get("user", []))
+        code_limit = code_info.get("use", 0)
+        
+        await dc.notifly(
+            title="兌換代碼",
+            description=f"用戶：{current_user.username} ({current_user.id})\n代碼：{code} (已使用 {code_usage}/{code_limit})",
+            img=f"{SETTING['oauth']['url']}static/notifly/code.png"
+        )
+        
+        return JSONResponse({
+            "success": True,
+            "message": "兌換成功"
+        })
+    
+    # 原有邏輯保留作為後備
     success, result = db.use_code(code, current_user.id)
     
     if not success:

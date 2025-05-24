@@ -14,6 +14,79 @@
   <script src="./static/assets/js/charts-lines.js" defer></script>
   <script src="./static/assets/js/charts-pie.js" defer></script>
   <script src="./static/assets/js/get_server.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    async function confirmDelete(serverIdentifier, serverName) {
+      const result = await Swal.fire({
+        title: '確認刪除伺服器',
+        text: `您確定要刪除伺服器 "${serverName}" 嗎？此操作無法復原！`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '確認刪除',
+        cancelButtonText: '取消',
+        customClass: {
+          popup: 'dark:bg-gray-800 dark:text-gray-200',
+          title: 'dark:text-gray-200',
+          content: 'dark:text-gray-400'
+        }
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/server/del/${serverIdentifier}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            await Swal.fire({
+              title: '刪除成功',
+              text: data.message,
+              icon: 'success',
+              confirmButtonColor: '#059669',
+              customClass: {
+                popup: 'dark:bg-gray-800 dark:text-gray-200',
+                title: 'dark:text-gray-200',
+                content: 'dark:text-gray-400'
+              }
+            });
+            window.location.reload();
+          } else {
+            await Swal.fire({
+              title: '刪除失敗',
+              text: data.message,
+              icon: 'error',
+              confirmButtonColor: '#dc2626',
+              customClass: {
+                popup: 'dark:bg-gray-800 dark:text-gray-200',
+                title: 'dark:text-gray-200',
+                content: 'dark:text-gray-400'
+              }
+            });
+          }
+        } catch (error) {
+          await Swal.fire({
+            title: '網路錯誤',
+            text: '請檢查網路連線並重試',
+            icon: 'error',
+            confirmButtonColor: '#dc2626',
+            customClass: {
+              popup: 'dark:bg-gray-800 dark:text-gray-200',
+              title: 'dark:text-gray-200',
+              content: 'dark:text-gray-400'
+            }
+          });
+        }
+      }
+    }
+  </script>
 </head>
 
 <body>

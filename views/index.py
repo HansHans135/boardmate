@@ -4,7 +4,7 @@ import string
 import time
 
 from fastapi import APIRouter, Form, Query, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from utils.dc import Dc
@@ -77,17 +77,19 @@ async def index_server_add_post(
 ):
     access_token = request.session.get("access_token")
     if not access_token:
-        return RedirectResponse(url="/login", status_code=302)
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "message": "未登入，請重新登入"}
+        )
+    
     current_user = await dc.get_discord_user(access_token)
     
     if str(current_user.id) in ADD_TMP:
         if ADD_TMP[str(current_user.id)] - int(time.time()) > 0:
-            await asyncio.sleep(3)
-            return templates.TemplateResponse("msg.html", {
-                "request": request,
-                "message": "你按的有點快，等一下再試試吧",
-                "href": False
-            })
+            return JSONResponse(
+                status_code=429,
+                content={"success": False, "message": "你按的有點快，等一下再試試吧"}
+            )
     ADD_TMP[str(current_user.id)] = int(time.time()) + 10
     
     servers = await ptero.search_all_data(email=current_user.email, u_id=current_user.id)
@@ -95,29 +97,25 @@ async def index_server_add_post(
     resource = servers["resource"]
     
     if now["servers"] + 1 > resource["servers"]:
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "已達伺服器數量上限",
-            "href": False
-        })
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "已達伺服器數量上限"}
+        )
     if cpu <= 0 or now["cpu"] + cpu > resource["cpu"]:
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "你沒有足夠的CPU",
-            "href": False
-        })
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "你沒有足夠的CPU"}
+        )
     if memory <= 0 or now["memory"] + memory > resource["memory"]:
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "你沒有足夠的記憶體",
-            "href": False
-        })
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "你沒有足夠的記憶體"}
+        )
     if disk <= 0 or now["disk"] + disk > resource["disk"]:
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "你沒有足夠的空間",
-            "href": False
-        })
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "你沒有足夠的空間"}
+        )
 
     ptero_user = await ptero.search_user(current_user.email)
     server = await ptero.create_server(
@@ -131,59 +129,69 @@ async def index_server_add_post(
     )
     
     if "errors" in server:
-        return server
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "創建伺服器時發生錯誤，請稍後再試"}
+        )
         
     await dc.notifly(
         title="創建伺服器",
         description=f"用戶：{current_user.username} ({current_user.id})\n> Name：{name}\n> CPU：{cpu}\n> Memory：{memory}\n> Disk{disk}\n> Node：{node}\n> Type：{egg}",
         img=current_user.avatar_url
     )
-    return RedirectResponse(url="/", status_code=302)
+    
+    return JSONResponse(
+        status_code=200,
+        content={"success": True, "message": f"伺服器 '{name}' 創建成功！"}
+    )
 
-@home.get("/server/del/{server_identifier}")
-async def index_server_del(request: Request, server_identifier: str, check: str = Query(None)):
+@home.post("/server/del/{server_identifier}")
+async def index_server_del_post(request: Request, server_identifier: str):
+    """安全的 POST 刪除伺服器端點"""
     access_token = request.session.get("access_token")
     if not access_token:
-        return RedirectResponse(url="/login", status_code=302)
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "message": "未登入，請重新登入"}
+        )
+    
     current_user = await dc.get_discord_user(access_token)
     
-    if check:
-        if server_identifier in CHEAK_TMP:
-            if check == CHEAK_TMP[server_identifier]:
-                servers = await ptero.search_all_data(current_user.email, current_user.id)
-                servers = servers["server"]
-                for i in servers:
-                    if i == server_identifier:
-                        await ptero.delete_server(i)
-                        return templates.TemplateResponse("msg.html", {
-                            "request": request,
-                            "message": "刪除成功",
-                            "href": "/"
-                        })
-                return templates.TemplateResponse("msg.html", {
-                    "request": request,
-                    "message": "伺服器不存在",
-                    "href": "/"
-                })
-            else:
-                return templates.TemplateResponse("msg.html", {
-                    "request": request,
-                    "message": "授權失敗",
-                    "href": "/"
-                })
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "授權失敗",
-            "href": "/"
-        })
-    else:
-        check_token = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(10))
-        CHEAK_TMP[server_identifier] = check_token
-        return templates.TemplateResponse("del_check.html", {
-            "request": request,
-            "identifier": server_identifier,
-            "token": check_token
-        })
+    try:
+        servers = await ptero.search_all_data(current_user.email, current_user.id)
+        server_found = False
+        server_name = ""
+        
+        for sid, server_info in servers["server"].items():
+            if sid == server_identifier:
+                server_found = True
+                server_name = server_info.get("name", "未知伺服器")
+                break
+        
+        if not server_found:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "伺服器不存在或您沒有權限刪除此伺服器"}
+            )
+        
+        await ptero.delete_server(server_identifier)
+        
+        await dc.notifly(
+            title="刪除伺服器",
+            description=f"用戶：{current_user.username} ({current_user.id})\n> 伺服器：{server_name}\n> ID：{server_identifier}",
+            img=current_user.avatar_url
+        )
+        
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": f"伺服器 '{server_name}' 已成功刪除"}
+        )
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": "刪除伺服器時發生錯誤，請稍後再試"}
+        )
 
 @home.get("/server/edit/{server_identifier}")
 async def index_server_edit_get(request: Request, server_identifier: str):
@@ -224,7 +232,10 @@ async def index_server_edit_post(
 ):
     access_token = request.session.get("access_token")
     if not access_token:
-        return RedirectResponse(url="/login", status_code=302)
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "message": "未登入，請重新登入"}
+        )
     current_user = await dc.get_discord_user(access_token)
     
     servers = await ptero.search_all_data(email=current_user.email, u_id=current_user.id)
@@ -236,33 +247,29 @@ async def index_server_edit_post(
             old_servers = servers["server"][i]
             break
     if not old_servers:
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "伺服器不存在",
-            "href": False
-        })
+        return JSONResponse(
+            status_code=404,
+            content={"success": False, "message": "伺服器不存在"}
+        )
     
     ptero_user_id = await ptero.search_user(current_user.email)
     ptero_user_id = ptero_user_id['id']
 
     if cpu <= 0 or now["cpu"] - old_servers["cpu"] + cpu > resource["cpu"]:
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "你沒有足夠的CPU",
-            "href": False
-        })
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "你沒有足夠的CPU"}
+        )
     if memory <= 0 or now["memory"] - old_servers["memory"] + memory > resource["memory"]:
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "你沒有足夠的記憶體",
-            "href": False
-        })
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "你沒有足夠的記憶體"}
+        )
     if disk <= 0 or now["disk"] - old_servers["disk"] + disk > resource["disk"]:
-        return templates.TemplateResponse("msg.html", {
-            "request": request,
-            "message": "你沒有足夠的空間",
-            "href": False
-        })
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "你沒有足夠的空間"}
+        )
     
     await ptero.edit_server(
         server_identifier=server_identifier,
@@ -270,8 +277,7 @@ async def index_server_edit_post(
         server_cpu=cpu,
         server_disk=disk
     )
-    return templates.TemplateResponse("msg.html", {
-        "request": request,
-        "message": "修改成功",
-        "href": "/"
-    })
+    return JSONResponse(
+        status_code=200,
+        content={"success": True, "message": "修改成功"}
+    )

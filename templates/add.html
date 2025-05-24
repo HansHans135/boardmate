@@ -14,6 +14,7 @@
   <script src="/static/assets/js/charts-lines.js" defer></script>
   <script src="/static/assets/js/charts-pie.js" defer></script>
   <script src="/static/assets/js/get_server.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -408,7 +409,7 @@
           </h4>
           <div class="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
             
-              <form action="#" method="post">
+              <form id="createServerForm" action="/server/add" method="post">
                 <label class="block text-sm">
                   <span class="text-gray-700 dark:text-gray-400">名稱</span>
                   <input required
@@ -464,7 +465,7 @@
 
                 <label class="block mt-4 text-sm">
                   <div>
-                    <button
+                    <button type="submit"
                       class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
                       創建
                     </button>
@@ -476,6 +477,58 @@
       </main>
     </div>
   </div>
+
+  <script>
+    document.getElementById('createServerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      Swal.fire({
+        title: '正在創建伺服器...',
+        text: '請稍候，我們正在為您創建伺服器',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      try {
+        const formData = new FormData(this);
+        const response = await fetch('/server/add', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          await Swal.fire({
+            icon: 'success',
+            title: '創建成功！',
+            text: result.message || '伺服器已成功創建',
+            confirmButtonText: '確定'
+          });
+          window.location.href = '/';
+        } else {
+          await Swal.fire({
+            icon: 'error',
+            title: '創建失敗',
+            text: result.message || '創建伺服器時發生錯誤',
+            confirmButtonText: '確定'
+          });
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: '網路錯誤',
+          text: '請檢查網路連接後重試',
+          confirmButtonText: '確定'
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>

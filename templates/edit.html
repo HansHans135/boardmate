@@ -14,6 +14,7 @@
   <script src="/static/assets/js/charts-lines.js" defer></script>
   <script src="/static/assets/js/charts-pie.js" defer></script>
   <script src="/static/assets/js/get_server.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -405,21 +406,14 @@
             編輯伺服器
           </h4>
           <div class="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
-              <form action="#" method="post">
+              <form id="editServerForm" onsubmit="editServer(event)">
                 {% if error %}
                 <label class="block text-sm">
                   <span class="text-gray-700 dark:text-gray-400">{{error}}</span>
                 </label>
                 {% endif %}
-                <!--
-                <label class="block text-sm">
-                  <span class="text-gray-700 dark:text-gray-400">伺服器識別碼</span>
-                  <input disabled type="text" value="{{ identifier }}"
-                    class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input" />
-                </label>
-                -->
                 
-                <label class="block text-sm"></label>
+                <label class="block text-sm">
                   <span class="text-gray-700 dark:text-gray-400">伺服器名稱</span>
                   <input disabled type="text" value="{{ server.name }}"
                     class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input" />
@@ -449,7 +443,7 @@
 
                 <label class="block mt-4 text-sm">
                   <div>
-                    <button
+                    <button type="submit"
                       class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
                       編輯
                     </button>
@@ -468,3 +462,72 @@
 </body>
 
 </html>
+
+<script>
+async function editServer(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    Swal.fire({
+        title: '正在編輯伺服器...',
+        text: '請稍候，正在處理您的請求',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    try {
+        const response = await fetch(window.location.pathname, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.text();
+        
+        if (result.includes('修改成功')) {
+            Swal.fire({
+                icon: 'success',
+                title: '編輯成功！',
+                text: '伺服器已成功更新',
+                confirmButtonColor: '#8B5CF6'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/';
+                }
+            });
+        } else if (result.includes('你沒有足夠的')) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(result, 'text/html');
+            const messageElement = doc.querySelector('h1');
+            const errorMessage = messageElement ? messageElement.textContent : '資源不足';
+            
+            Swal.fire({
+                icon: 'error',
+                title: '編輯失敗',
+                text: errorMessage,
+                confirmButtonColor: '#8B5CF6'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: '編輯失敗',
+                text: '發生未知錯誤，請稍後再試',
+                confirmButtonColor: '#8B5CF6'
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: '網路錯誤',
+            text: '無法連接到伺服器，請檢查網路連線',
+            confirmButtonColor: '#8B5CF6'
+        });
+    }
+}
+</script>

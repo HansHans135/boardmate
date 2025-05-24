@@ -82,7 +82,6 @@ for filename in os.listdir(views_dir):
         module = __import__(f'views.{module_name}', fromlist=['*'])
         print(f"  L {module_name}.py")
         if hasattr(module, 'home'):
-            # FastAPI 使用 include_router 而不是 register_blueprint
             app.include_router(module.home)
 print("> 已註冊檔案")
 
