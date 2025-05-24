@@ -193,7 +193,15 @@ class Ptero:
             if i["attributes"]["assigned"] == False:
                 allocation = i["attributes"]["id"]
                 break
-        await self.get_allocations(server_node, use_cache=False)
+        
+        for i in all_allocation:
+            if i["attributes"]["id"] == allocation:
+                i["attributes"]["assigned"] = True
+                break
+            
+        with open(f"data/node_{server_node}_allocation_tmp.cache", "w", encoding="utf-8") as f:
+            json.dump(all_allocation, f, ensure_ascii=False, indent=4)
+        
         settings = get_settings()
         data = {
             "name": server_name,
