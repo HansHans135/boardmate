@@ -2,6 +2,8 @@ import asyncio
 import random
 import string
 import time
+from datetime import datetime, timedelta
+from typing import Dict, Optional
 
 from fastapi import APIRouter, Form, Query, Request
 from fastapi.responses import RedirectResponse, JSONResponse
@@ -19,6 +21,51 @@ home = APIRouter(tags=["home"])
 ptero = Ptero(SETTING["pterodactyl"]["key"], SETTING["pterodactyl"]["url"])
 db = get_db()
 templates = Jinja2Templates(directory="templates")
+
+class RateLimitManager:
+    def __init__(self):
+        self.limits: Dict[str, Dict[str, float]] = {}
+        self.cleanup_interval = 300
+        self.last_cleanup = time.time()
+    
+    def _cleanup_expired(self):
+        current_time = time.time()
+        if current_time - self.last_cleanup > self.cleanup_interval:
+            for user_id in list(self.limits.keys()):
+                user_limits = self.limits[user_id]
+                expired_actions = [
+                    action for action, expire_time in user_limits.items()
+                    if expire_time <= current_time
+                ]
+                for action in expired_actions:
+                    del user_limits[action]
+                if not user_limits:
+                    del self.limits[user_id]
+            self.last_cleanup = current_time
+    
+    def is_rate_limited(self, user_id: str, action: str, cooldown_seconds: int = 10) -> tuple[bool, Optional[int]]:
+        self._cleanup_expired()
+        current_time = time.time()
+        
+        if user_id not in self.limits:
+            self.limits[user_id] = {}
+        
+        if action in self.limits[user_id]:
+            remaining_time = self.limits[user_id][action] - current_time
+            if remaining_time > 0:
+                return True, int(remaining_time)
+        
+        self.limits[user_id][action] = current_time + cooldown_seconds
+        return False, None
+    
+    def get_remaining_time(self, user_id: str, action: str) -> Optional[int]:
+        if user_id not in self.limits or action not in self.limits[user_id]:
+            return None
+        
+        remaining = self.limits[user_id][action] - time.time()
+        return max(0, int(remaining))
+
+rate_limiter = RateLimitManager()
 
 @home.get("/")
 async def index_home(request: Request, passwd: str = Query(None)):
@@ -84,13 +131,21 @@ async def index_server_add_post(
     
     current_user = await dc.get_discord_user(access_token)
     
-    if str(current_user.id) in ADD_TMP:
-        if ADD_TMP[str(current_user.id)] - int(time.time()) > 0:
-            return JSONResponse(
-                status_code=429,
-                content={"success": False, "message": "你按的有點快，等一下再試試吧"}
-            )
-    ADD_TMP[str(current_user.id)] = int(time.time()) + 10
+    is_limited, remaining_time = rate_limiter.is_rate_limited(
+        str(current_user.id), 
+        "create_server", 
+        cooldown_seconds=10
+    )
+    
+    if is_limited:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "success": False, 
+                "message": f"操作過於頻繁，請等待 {remaining_time} 秒後再試",
+                "remaining_time": remaining_time
+            }
+        )
     
     servers = await ptero.search_all_data(email=current_user.email, u_id=current_user.id)
     now = servers["now"]
@@ -129,6 +184,9 @@ async def index_server_add_post(
     )
     
     if "errors" in server:
+        if str(current_user.id) in rate_limiter.limits:
+            rate_limiter.limits[str(current_user.id)].pop("create_server", None)
+        
         return JSONResponse(
             status_code=400,
             content={"success": False, "message": "創建伺服器時發生錯誤，請稍後再試"}
@@ -136,7 +194,7 @@ async def index_server_add_post(
         
     await dc.notifly(
         title="創建伺服器",
-        description=f"用戶：{current_user.username} ({current_user.id})\n> Name：{name}\n> CPU：{cpu}\n> Memory：{memory}\n> Disk{disk}\n> Node：{node}\n> Type：{egg}",
+        description=f"用戶：{current_user.username} ({current_user.id})\n> Name：{name}\n> CPU：{cpu}\n> Memory：{memory}\n> Disk：{disk}\n> Node：{node}\n> Type：{egg}",
         img=current_user.avatar_url
     )
     
@@ -153,6 +211,24 @@ async def index_server_del_post(request: Request, server_identifier: str):
         return JSONResponse(
             status_code=401,
             content={"success": False, "message": "未登入，請重新登入"}
+        )
+    
+    current_user = await dc.get_discord_user(access_token)
+    
+    is_limited, remaining_time = rate_limiter.is_rate_limited(
+        str(current_user.id), 
+        "delete_server", 
+        cooldown_seconds=5
+    )
+    
+    if is_limited:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "success": False, 
+                "message": f"操作過於頻繁，請等待 {remaining_time} 秒後再試",
+                "remaining_time": remaining_time
+            }
         )
     
     current_user = await dc.get_discord_user(access_token)
@@ -237,6 +313,22 @@ async def index_server_edit_post(
             content={"success": False, "message": "未登入，請重新登入"}
         )
     current_user = await dc.get_discord_user(access_token)
+    
+    is_limited, remaining_time = rate_limiter.is_rate_limited(
+        str(current_user.id), 
+        "edit_server", 
+        cooldown_seconds=5
+    )
+    
+    if is_limited:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "success": False, 
+                "message": f"操作過於頻繁，請等待 {remaining_time} 秒後再試",
+                "remaining_time": remaining_time
+            }
+        )
     
     servers = await ptero.search_all_data(email=current_user.email, u_id=current_user.id)
     now = servers["now"]
