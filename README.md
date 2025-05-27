@@ -11,7 +11,7 @@
 - 自動化流程<br>
 - Discord登入<br>
 - 管理員後台<br>
-- 提供[Admin API](https://github.com/HansHans135/boardmate/blob/main/api.md)
+- 提供Admin API
 
 <br>
 
@@ -35,6 +35,7 @@ Demo: https://shop-fmdb.maybeisfree.host/<br>
 # 安裝與配置
 參考[此說明](https://github.com/HansHans135/boardmate/blob/main/install.md)
 
+API Docs參考`/docs` [(API預覽)](https://shop-fmdb.maybeisfree.host/)
 <br>
 
 # 反饋

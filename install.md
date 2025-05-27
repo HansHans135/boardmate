@@ -40,7 +40,17 @@ flask
             "node1":1,
             "node2":2
         }, //可用節點(其中nodeX是節點名稱,後面是節點id)
-        "eggs": {}, //參考步驟3
+        "eggs": {
+            "Node.js": {
+            "max_resource": {//最高資源限制(0為不限制)
+                "memory": 0,
+                "disk": 0,
+                "cpu": 0
+            },
+            "egg_id": 19, //此egg在面板上的id
+            "nest_id": 5,//此egg在nest的id
+            }
+        }, //以此類推增加更多類類型
         "feature_limits": {
             "databases": 0, //每台伺服器的資料庫數量
             "backups": 1 //每台伺服器的輩分數量
@@ -75,34 +85,5 @@ flask
 }
 ```
 
-# 3. egg配置
-以[此egg](https://github.com/parkervcp/eggs/blob/master/generic/nodejs/egg-node-js-generic.json)作為範例<br>
-1. 下載所需要的egg並和`egg.py`在同一個層級
-2. 運行`egg.py`
-- 你會得到
-```json
-"Node.js": {
-    "max_resource": {//最高資源限制(0為不限制)
-        "memory": 0,
-        "disk": 0,
-        "cpu": 0
-    },
-    "egg_id": 19, //此egg在面板上的id
-    "startup": "if [[ -d .git ]] && [[ {{AUTO_UPDATE}} == '1' ]]; then git pull; fi; if [[ ! -z ${NODE_PACKAGES} ]]; then /usr/local/bin/npm install ${NODE_PACKAGES}; fi; if [[ ! -z ${UNNODE_PACKAGES} ]]; then /usr/local/bin/npm uninstall ${UNNODE_PACKAGES}; fi; if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi; /usr/local/bin/node /home/container/{{JS_FILE}}",
-    "docker_image": "ghcr.io/parkervcp/yolks:nodejs_12",
-    "environment": {
-        "GIT_ADDRESS": "",
-        "BRANCH": "",
-        "USER_UPLOAD": "0",
-        "AUTO_UPDATE": "0",
-        "JS_FILE": "index.js",
-        "NODE_PACKAGES": "",
-        "USERNAME": "",
-        "ACCESS_TOKEN": "",
-        "UNNODE_PACKAGES": ""
-    }
-}
-```
-
-# 4. run and enjoy!
+# 3. run and enjoy!
 啟動app.py
