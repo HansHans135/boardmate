@@ -203,13 +203,14 @@ class Ptero:
             json.dump(all_allocation, f, ensure_ascii=False, indent=4)
         
         settings = get_settings()
+        egg_data= await self.get_egg(settings["server"]["eggs"][server_egg]["nest_id"], settings["server"]["eggs"][server_egg]["egg_id"])
         data = {
             "name": server_name,
             "user": ptero_user_id,
             "egg": settings["server"]["eggs"][server_egg]["egg_id"],
-            "docker_image": settings["server"]["eggs"][server_egg]["docker_image"],
-            "startup": settings["server"]["eggs"][server_egg]["startup"],
-            "environment": settings["server"]["eggs"][server_egg]["environment"],
+            "docker_image": egg_data["docker_image"],
+            "startup": egg_data["startup"],
+            "environment": egg_data["environment"],
             "limits": {
                 "memory": server_memory,
                 "swap": 0,
@@ -278,3 +279,37 @@ class Ptero:
                 with open("data/server_tmp.cache", "w", encoding="utf-8") as f:
                     json.dump(servers, f, ensure_ascii=False, indent=4)
                 return
+        
+    def convert_egg_config(self,input_data):
+        if isinstance(input_data, str):
+            data = json.loads(input_data)
+        else:
+            data = input_data
+        output = {
+            "startup": data.get("startup", ""),
+            "docker_image": data.get("docker_image", ""),
+            "environment": {}
+        }
+        
+        variables = data.get("relationships", {}).get("variables", {}).get("data", [])
+        
+        for variable in variables:
+            if variable.get("object") == "egg_variable":
+                attributes = variable.get("attributes", {})
+                env_var = attributes.get("env_variable")
+                default_value = attributes.get("default_value", "")
+                
+                if env_var:
+                    output["environment"][env_var] = default_value
+        
+        return output
+
+    async def get_egg(self,nests_id,egg_id):
+        headers = self.headers
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(f'{self.base_url}api/application/nests/{nests_id}/eggs/{egg_id}?include=variables,config,script') as response:
+                data = await response.json()
+                egg_data=data["attributes"]
+                print(json.dumps(egg_data,indent=4,ensure_ascii=False))
+        ed = self.convert_egg_config(egg_data)
+        return ed
