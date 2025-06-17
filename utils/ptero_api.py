@@ -36,6 +36,8 @@ class Ptero:
                 async with aiohttp.ClientSession(headers=headers) as session:
                     async with session.get(url) as response:
                         data = await response.json()
+                        if data.get("errors"):
+                            raise RuntimeError(data)
                         user_list += data["data"]
                         try:
                             url = data["meta"]["pagination"]["links"]["next"]
@@ -59,6 +61,8 @@ class Ptero:
                 async with aiohttp.ClientSession(headers=headers) as session:
                     async with session.get(url) as response:
                         data = await response.json()
+                        if data.get("errors"):
+                            raise RuntimeError(data)
                         server_list += data["data"]
                         try:
                             url = data["meta"]["pagination"]["links"]["next"]
@@ -82,6 +86,8 @@ class Ptero:
                 async with aiohttp.ClientSession(headers=headers) as session:
                     async with session.get(url) as response:
                         data = await response.json()
+                        if data.get("errors"):
+                            raise RuntimeError(data)
                         allocation_list += data["data"]
                         try:
                             url = data["meta"]["pagination"]["links"]["next"]
@@ -161,6 +167,8 @@ class Ptero:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(f'{self.base_url}api/application/users', data=json.dumps(data)) as response:
                 data = await response.json()
+                if data.get("errors"):
+                    raise RuntimeError(data)
                 with open("data/user_tmp.cache","r",encoding="utf-8")as f:
                     uc=json.load(f)
                 uc.append(data)
@@ -183,6 +191,8 @@ class Ptero:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.patch(f'{self.base_url}api/application/users/{u_id}', data=json.dumps(data)) as response:
                 data = await response.json()
+                if data.get("errors"):
+                    raise RuntimeError(data)
                 data=data["attributes"]
                 data["password"]=password
         return data
@@ -230,6 +240,8 @@ class Ptero:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(f'{self.base_url}api/application/servers', data=json.dumps(data)) as response:
                 data = await response.json()
+                if data.get("errors"):
+                    raise RuntimeError(data)
         if "errors" not in data:
             tmp_data = await self.get_servers()
             tmp_data += data,
@@ -273,6 +285,8 @@ class Ptero:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.patch(f'{self.base_url}api/application/servers/{server_id}/build',data=json.dumps(payload)) as response:
                 data = await response.json()
+                if data.get("errors"):
+                    raise RuntimeError(data)
                 servers = [server for server in servers if server["attributes"]
                            ["identifier"] != server_identifier]
                 servers += [data]
@@ -309,7 +323,8 @@ class Ptero:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(f'{self.base_url}api/application/nests/{nests_id}/eggs/{egg_id}?include=variables,config,script') as response:
                 data = await response.json()
+                if data.get("errors"):
+                    raise RuntimeError(data)
                 egg_data=data["attributes"]
-                print(json.dumps(egg_data,indent=4,ensure_ascii=False))
         ed = self.convert_egg_config(egg_data)
         return ed
