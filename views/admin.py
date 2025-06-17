@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import hashlib
 from urllib.parse import urlencode
 
@@ -189,9 +190,11 @@ async def admin_setting_post(request: Request, memory: int = Form(...), cpu: int
     SETTING['server']['default_resource']['disk'] = disk
     SETTING['boardmate']['admins'] = []
     for admin in admins.split("\n"):
-        if admin.strip():
+        if admin.strip() != "":
             SETTING['boardmate']['admins'].append(admin.strip())
     
+    with open("setting.json","w+",encoding="utf-8")as f:
+        json.dump(SETTING,f,ensure_ascii=False,indent=4)
     await dc.notifly(
         title="更新設定",
         description=f"用戶：{current_user.username} ({current_user.id})",
