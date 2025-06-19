@@ -171,6 +171,24 @@ async def index_server_add_post(
             status_code=400,
             content={"success": False, "message": "你沒有足夠的空間"}
         )
+    max_resource = SETTING['server']['eggs'][egg]["max_resource"]
+
+    if disk > max_resource['disk'] and max_resource['disk'] != 0:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": f"超過空間上限（最高 {max_resource['disk']} MB）"}
+        )
+    if cpu > max_resource['cpu'] and max_resource['cpu'] != 0:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": f"超過 CPU 上限（最高 {max_resource['cpu']} %）"}
+        )
+    if memory > max_resource['memory'] and max_resource['memory'] != 0:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": f"超過記憶體上限（最高 {max_resource['memory']} MB）"}
+        )
+    
 
     ptero_user = await ptero.search_user(current_user.email)
     server = await ptero.create_server(
