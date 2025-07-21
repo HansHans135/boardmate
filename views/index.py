@@ -365,17 +365,17 @@ async def index_server_edit_post(
     ptero_user_id = await ptero.search_user(current_user.email)
     ptero_user_id = ptero_user_id['id']
 
-    if cpu <= 0 or now["cpu"] - old_servers["cpu"] + cpu > resource["cpu"]:
+    if cpu <= 0 or now["cpu"] - old_servers["cpu"] + cpu >= resource["cpu"]:
         return JSONResponse(
             status_code=400,
             content={"success": False, "message": "你沒有足夠的CPU"}
         )
-    if memory <= 0 or now["memory"] - old_servers["memory"] + memory > resource["memory"]:
+    if memory <= 0 or now["memory"] - old_servers["memory"] + memory >= resource["memory"]:
         return JSONResponse(
             status_code=400,
             content={"success": False, "message": "你沒有足夠的記憶體"}
         )
-    if disk <= 0 or now["disk"] - old_servers["disk"] + disk > resource["disk"]:
+    if disk <= 0 or now["disk"] - old_servers["disk"] + disk >= resource["disk"]:
         return JSONResponse(
             status_code=400,
             content={"success": False, "message": "你沒有足夠的空間"}
